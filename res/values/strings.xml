@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<!-- common -->
+	<string name="app_name">RoCKIn@Home</string>
+	<string name="action_settings">Setting</string>
+
+	<!-- setting -->
+	<string name="host_ip">Host</string>
+	<string name="port">Port</string>
+	<string name="interval">Interval (ms)</string>
+	<string name="repetition">Repetition</string>
+	<string name="send_setting_title">Send setting</string>
+	<string name="receive_setting_title">Receive setting</string>
+	<string name="timeout">Timeout (ms)</string>
+	<string name="ok">OK!!!</string>
+	<string name="broadcast">Broadcast</string>
+	<string name="cancel">Cancel</string>
+	<string name="trial">Trial</string>
+
+	<!-- main layout -->
+	<string name="listen">Listen</string>
+	<string name="call_robot">Call Robot</string>
+	<string name="show_map">Show map</string>
+
+</resources>

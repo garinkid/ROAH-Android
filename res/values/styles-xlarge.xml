@@ -1,0 +1,62 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<!--
+		Base application theme, dependent on API level. This theme is replaced
+		by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+	-->
+	<style name="AppBaseTheme" parent="android:Theme.Light">
+		<!--
+		Theme customizations available in newer API levels can go in
+		res/values-vXX/styles.xml, while customizations related to
+		backward-compatibility can go here.
+		-->
+	</style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style>
+    
+   <style name="button_xlarge">
+       <item name="android:background">@layout/common_button</item>
+       <item name="android:textSize">25sp</item>
+       <item name="android:minHeight">20dp</item>
+       <item name="android:textColor">@android:color/white</item>
+       <item name="android:padding">10dp</item>
+   </style>
+   
+   <style name="view_separator_horizontal_xlarge">
+       <item name="android:background">@android:color/transparent</item>
+       <item name="android:layout_width">fill_parent</item>
+       <item name="android:layout_height">20dp</item>
+   </style>
+   
+   <style name="view_separator_vertical_xlarge">
+       <item name="android:background">@android:color/transparent</item>
+       <item name="android:layout_height">fill_parent</item>
+       <item name="android:layout_width">20dp</item>
+   </style>
+   
+   <style name="setting_title_text_xlarge">
+       <item name="android:background">@android:color/transparent</item>
+       <item name="android:padding">20dp</item>
+       <item name="android:textSize">20sp</item>
+       <item name="android:textStyle">bold</item>
+       <item name="android:textColor">@android:color/black</item>
+   </style>
+   
+   <style name="setting_variable_text_xlarge">
+       <item name="android:background">@android:color/transparent</item>
+       <item name="android:textSize">18sp</item>
+       <item name="android:textColor">@android:color/black</item>
+       <item name="android:layout_weight">0.6</item>
+       <item name="android:layout_height">wrap_content</item>
+   </style>
+   
+    <style name="setting_variable_edit_text_xlarge">
+       <item name="android:textSize">16sp</item>
+       <item name="android:layout_weight">0.4</item>
+       <item name="android:layout_height">wrap_content</item>
+   </style>
+
+</resources>

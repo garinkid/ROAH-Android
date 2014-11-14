@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:minWidth="350dp"
+	android:background="@android:color/white"
+	android:orientation="vertical" >
+	<ScrollView android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+		<LinearLayout android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"
+			android:orientation="vertical"	
+			android:paddingLeft="20dp"
+			android:paddingRight="20dp">
+			<TextView style="@style/setting_title_text"
+				android:id="@+id/send_setting_title_layout"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="@string/send_setting_title"/>
+			<TableRow android:id="@+id/host_ip_layout"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text"  
+					android:text="@string/host_ip" />
+				<EditText style="@style/setting_variable_edit_text"  
+				    android:hint="@string/host_ip" 
+					android:id="@+id/host_ip_input"
+					android:inputType="text"/>
+			</TableRow>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text"  
+					android:text="@string/port" />
+				<EditText style="@style/setting_variable_edit_text" 
+					android:hint="@string/port" 
+					android:id="@+id/send_port_input"
+					android:inputType="number"/>
+			</TableRow>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text"  
+					android:text="@string/interval" />
+				<EditText style="@style/setting_variable_edit_text"
+					android:hint="@string/interval" 
+					android:id="@+id/send_interval_input"
+					android:inputType="number"/>
+			</TableRow>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text"  
+					android:text="@string/repetition" />
+				<EditText style="@style/setting_variable_edit_text" 
+					android:hint="@string/repetition" 
+					android:id="@+id/send_repetition_input"
+					android:inputType="number"/>
+			</TableRow>
+			<TextView style="@style/setting_title_text" 
+			    android:id="@+id/receive_setting_title_layout"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="@string/receive_setting_title"/>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text" 
+					android:text="@string/port" />
+				<EditText style="@style/setting_variable_edit_text" 
+					android:hint="@string/port"
+					android:id="@+id/receive_port_input"
+					android:inputType="number"/>
+			</TableRow>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text"  
+					android:text="@string/timeout" />
+				<EditText style="@style/setting_variable_edit_text" 
+					android:hint="@string/timeout"
+					android:id="@+id/receive_timeout_input"
+					android:inputType="number"/>
+			</TableRow>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal">
+				<TextView style="@style/setting_variable_text" 
+					android:text="@string/trial" />
+				<EditText style="@style/setting_variable_edit_text" 
+					android:hint="@string/trial"
+					android:id="@+id/receive_trial_input"
+					android:inputType="number"/>
+			</TableRow>
+			<TableRow android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal"
+				android:padding="20dp">
+				<Button style="@style/button"
+				    android:layout_height="wrap_content"
+					android:layout_weight="0.5" 
+					android:id="@+id/ok_input"
+					android:text="@string/ok"/>
+				<View style="@style/view_separator_vertical"/>
+				<Button style="@style/button" 
+				    android:layout_height="wrap_content"
+					android:id="@+id/cancel_input"
+					android:text="@string/cancel"
+					android:layout_weight="0.5"/>
+			</TableRow>
+		</LinearLayout>
+	</ScrollView>
+</LinearLayout>
