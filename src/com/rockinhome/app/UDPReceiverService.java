@@ -21,21 +21,19 @@ public class UDPReceiverService extends Thread{
 	int timeout,
 	  trialMax;
 	
+	boolean repetition; // no repetition upon failure and timeout = 0
+	
 	Context context;
 	
 	UDPReceiverService(Context context){
 		this.context = context;
 	}
 
-    public void run(Intent intent) {
+    public void run(int receive_port) {
 		Log.d("UDP", "is called");
-		int port = intent.getIntExtra(MainActivity.RECEIVE_PORT, 666);
-		timeout = intent.getIntExtra(MainActivity.TIMEOUT, -1);
-		trialMax = intent.getIntExtra(MainActivity.TRIAL, -1);
+		int port = receive_port;
 		running = true;
-		//new UDPReceiverAsyncTask().execute(hostSendingPort);
-		new UDPReceiverAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, port);
-		
+		new UDPReceiverAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, port);	
     }
 
     public void interrupt(){
@@ -54,11 +52,6 @@ public class UDPReceiverService extends Thread{
 				socket = new DatagramSocket(port[0]);
 				socket.setReuseAddress(true);
 				socket.setBroadcast(true);
-				if(timeout > 0){
-					socket.setSoTimeout(timeout);
-				}else{
-					socket.setSoTimeout(1000);
-				}
 				Log.d("UDP", "socket created with timeout:" + socket.getSoTimeout());
 			} catch (SocketException e1) {
 				// TODO Auto-generated catch block
@@ -69,7 +62,6 @@ public class UDPReceiverService extends Thread{
 			Intent broadcastActivityIntent = new Intent(MainActivity.ACTIVITY_LOG);
 			broadcastActivityIntent.putExtra(MainActivity.ACTIVITY_LOG, "listening to port:" + port[0]);
 			context.sendBroadcast(broadcastActivityIntent);
-			int trial = 0;
 			while(running){
 				try {
 					byte[] receiveMessage = new byte[socket.getReceiveBufferSize()];
@@ -79,25 +71,12 @@ public class UDPReceiverService extends Thread{
 					broadcastResultIntent.putExtra(RESULT, SUCCESS);
 					broadcastResultIntent.putExtra(UDPReceiverService.RECEIVED_PACKAGE, receiveMessage);
 					context.sendBroadcast(broadcastResultIntent);
-					trial = 0;
 				} catch (SocketException e) {
-					trial += 1;
 					e.printStackTrace();
 				} catch (UnknownHostException e) {
-					trial += 1;
 					e.printStackTrace();
 				} catch (IOException e) {
-					trial += 1;
 					e.printStackTrace();
-				}
-				if(trialMax < trial){
-					broadcastActivityIntent = new Intent(MainActivity.ACTIVITY_LOG);
-					broadcastActivityIntent.putExtra(MainActivity.ACTIVITY_LOG, "fail to receive packet after " + trialMax + " times time out");
-					context.sendBroadcast(broadcastActivityIntent);
-					Intent broadcastResultIntent = new Intent(UDPReceiverService.RECEIVED_PACKAGE);
-					broadcastResultIntent.putExtra(RESULT, FAIL);
-					context.sendBroadcast(broadcastResultIntent);
-					running = false;
 				}
 			}
 			socket.close();

@@ -41,8 +41,6 @@ public class MainActivity extends Activity {
 	public final static String RECEIVE_PORT="receive port",
 			  SEND_PORT="send port",
 			  HOST_IP="host ip",
-			  TIMEOUT="time out",
-			  TRIAL="trial",
 			  INTERVAL="interval",
 			  REPETITION="repetition",
 			  TAG = "Main activity",
@@ -50,6 +48,8 @@ public class MainActivity extends Activity {
 	
 	public final static int BUTTON_CALL = 1,
 			MAP_CALL = 2;
+	
+	public final static int DEFAULT_RECEIVE_PORT = 6666;
 
 	int sendPort,
 	  receivePort,
@@ -102,6 +102,7 @@ public class MainActivity extends Activity {
 		//collect previously set values
 		preferences =  PreferenceManager.getDefaultSharedPreferences(this);
 		//In the case where it is decided to use previous config as default config
+		/*
 		hostIP = preferences.getString(MainActivity.HOST_IP, "");
 		sendPort = preferences.getInt(MainActivity.SEND_PORT, -1);
 		repetition = preferences.getInt(MainActivity.REPETITION, -1);
@@ -109,17 +110,13 @@ public class MainActivity extends Activity {
 		receivePort = preferences.getInt(MainActivity.RECEIVE_PORT, -1);
 		timeout = preferences.getInt(MainActivity.TIMEOUT, -1);
 		trial = preferences.getInt(MainActivity.TRIAL, -1);
-		
+		*/
 		//using predefine value as config:
-		/*
 		hostIP = "10.255.255.255";
 		sendPort = 6666;
 		repetition = 1; // not being used TODO  eliminate
 		interval = 1000;
-		receivePort = 6666;
-		timeout = 0;  // Always listening
-		trial = 1; 
-		*/
+		receivePort = DEFAULT_RECEIVE_PORT;
 		informUserSetting();
 		
 		//set buttons
@@ -165,12 +162,18 @@ public class MainActivity extends Activity {
 		super.onResume();
 		registerReceiver(packageReceiver, intentFilterPackage);
 		registerReceiver(logReceiver, intentFilterLog);
+		//stop currently running thread
+		uDPReceiverService.interrupt();
+		//start new thread to listen with the new port
+		uDPReceiverService.run(receivePort);
 	}
 
 	@Override
 	protected void onPause() {
 		unregisterReceiver(packageReceiver);
 		unregisterReceiver(logReceiver);
+		//stop currently running thread
+		uDPReceiverService.interrupt();
 		super.onPause();
 	}
 
@@ -182,8 +185,6 @@ public class MainActivity extends Activity {
 		editor.putInt(MainActivity.INTERVAL, interval);
 		editor.putInt(MainActivity.SEND_PORT, sendPort);
 		editor.putInt(MainActivity.REPETITION, repetition);
-		editor.putInt(MainActivity.TIMEOUT, timeout);
-		editor.putInt(MainActivity.TRIAL, trial);
 		editor.putString(MainActivity.HOST_IP,hostIP);
 		editor.commit();
 		Log.d("Save state", "State saved");
@@ -195,27 +196,6 @@ public class MainActivity extends Activity {
 		public void onClick(View view) {
 			Intent intent;
 			switch(view.getId()){
-			case R.id.listen_button:
-				//Check application status
-				if(listening){
-					uDPReceiverService.interrupt();
-					listen.setText("Listen");
-					listening = false;
-				}else{
-					if(receivePort > 0){
-						intent = new Intent(context, UDPReceiverService.class);
-						intent.putExtra(MainActivity.TIMEOUT, timeout);
-						intent.putExtra(MainActivity.TRIAL, trial);
-						intent.putExtra(MainActivity.RECEIVE_PORT,receivePort);
-						uDPReceiverService.run(intent);
-						//startService(intent);
-						listening = true;
-						listen.setText("Stop");
-					}else{
-						informUser("No receive port has been defined");
-					}
-				}
-				break;
 			case R.id.call_robot_button:
 				Log.d(TAG, "Call robot button is pressed");
 				byte[] message = createTabletBeaconMessage(0.0, 0.0, BUTTON_CALL);
@@ -228,8 +208,6 @@ public class MainActivity extends Activity {
 				intent.putExtra(MainActivity.SEND_PORT, sendPort);
 				intent.putExtra(MainActivity.HOST_IP, hostIP);
 				intent.putExtra(MainActivity.INTERVAL, interval);
-				intent.putExtra(MainActivity.TIMEOUT, timeout);
-				intent.putExtra(MainActivity.TRIAL, trial);
 				intent.putExtra(MainActivity.REPETITION, repetition);
 				startActivityForResult(intent, SETTING_REQUEST);
 				break;
@@ -257,9 +235,7 @@ public class MainActivity extends Activity {
 				sendPort = intent.getIntExtra(MainActivity.SEND_PORT, -1);
 				repetition = intent.getIntExtra(MainActivity.REPETITION, -1);
 				interval = intent.getIntExtra(MainActivity.INTERVAL, -1);
-				receivePort = intent.getIntExtra(MainActivity.RECEIVE_PORT, -1);
-				timeout = intent.getIntExtra(MainActivity.TIMEOUT, -1);
-				trial = intent.getIntExtra(MainActivity.TRIAL, -1);
+				receivePort = intent.getIntExtra(MainActivity.RECEIVE_PORT, DEFAULT_RECEIVE_PORT);
 				informUserSetting();
 			}
 		}

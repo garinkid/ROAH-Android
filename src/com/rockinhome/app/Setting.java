@@ -51,8 +51,6 @@ public class Setting extends Activity{
 		//set View 
 		receivePortInput = onCreateEditTextView(R.id.receive_port_input, MainActivity.RECEIVE_PORT);
 		sendPortInput = onCreateEditTextView(R.id.send_port_input, MainActivity.SEND_PORT);
-		timeoutInput = onCreateEditTextView(R.id.receive_timeout_input, MainActivity.TIMEOUT);
-		trialInput = onCreateEditTextView(R.id.receive_trial_input, MainActivity.TRIAL);
 		repetitionInput = onCreateEditTextView(R.id.send_repetition_input, MainActivity.REPETITION);
 		intervalInput = onCreateEditTextView(R.id.send_interval_input, MainActivity.INTERVAL);
 		
@@ -111,8 +109,6 @@ public class Setting extends Activity{
 				returnIntent.putExtra(MainActivity.SEND_PORT, sendPort);
 				returnIntent.putExtra(MainActivity.HOST_IP, hostIP);
 				returnIntent.putExtra(MainActivity.INTERVAL, interval);
-				returnIntent.putExtra(MainActivity.TIMEOUT, timeout);
-				returnIntent.putExtra(MainActivity.TRIAL, trial);
 				returnIntent.putExtra(MainActivity.REPETITION, repetition);
 				
 				//set result
