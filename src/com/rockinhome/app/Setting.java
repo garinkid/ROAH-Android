@@ -14,7 +14,6 @@ public class Setting extends Activity{
 	EditText receivePortInput, 
 	  sendPortInput,
 	  hostIPInput,
-	  repetitionInput,
 	  intervalInput;
 
 	String hostIP;
@@ -47,7 +46,6 @@ public class Setting extends Activity{
 		//set View 
 		receivePortInput = onCreateEditTextView(R.id.receive_port_input, MainActivity.RECEIVE_PORT);
 		sendPortInput = onCreateEditTextView(R.id.send_port_input, MainActivity.SEND_PORT);
-		repetitionInput = onCreateEditTextView(R.id.send_repetition_input, MainActivity.REPETITION);
 		intervalInput = onCreateEditTextView(R.id.send_interval_input, MainActivity.INTERVAL);
 		
 		//set Buttons
@@ -64,7 +62,6 @@ public class Setting extends Activity{
 		receivePort = editTextViewInput(receivePortInput);
 		sendPort = editTextViewInput(sendPortInput);
 		interval = editTextViewInput(intervalInput);
-		repetition =  editTextViewInput(repetitionInput);
 
 	}
 	
@@ -93,7 +90,6 @@ public class Setting extends Activity{
 				receivePort = editTextViewInput(receivePortInput);
 				sendPort = editTextViewInput(sendPortInput);
 				interval = editTextViewInput(intervalInput);
-				repetition =  editTextViewInput(repetitionInput);
 				hostIP = hostIPInput.getText().toString();
 				
 				//collect setting information to intent
@@ -101,8 +97,6 @@ public class Setting extends Activity{
 				returnIntent.putExtra(MainActivity.SEND_PORT, sendPort);
 				returnIntent.putExtra(MainActivity.HOST_IP, hostIP);
 				returnIntent.putExtra(MainActivity.INTERVAL, interval);
-				returnIntent.putExtra(MainActivity.REPETITION, repetition);
-				
 				//set result
 				setResult(RESULT_OK, returnIntent);
 				finish();

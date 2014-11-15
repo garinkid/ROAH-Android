@@ -45,7 +45,6 @@ public class MainActivity extends Activity {
 			  SEND_PORT="send port",
 			  HOST_IP="host ip",
 			  INTERVAL="interval",
-			  REPETITION="repetition",
 			  TAG = "Main activity",
 			  ACTIVITY_LOG="activity log";
 	
@@ -135,6 +134,7 @@ public class MainActivity extends Activity {
 		mapView.setVisibility(View.INVISIBLE);
 
 		activityLog = (TextView)findViewById(R.id.log);
+		activityLog.setVisibility(View.GONE);
 
 		intentFilterPackage = new IntentFilter(UDPReceiverService.RECEIVED_PACKAGE);
 		intentFilterLog = new IntentFilter(ACTIVITY_LOG);
@@ -150,6 +150,8 @@ public class MainActivity extends Activity {
 		//TabletBeacon coordinate when the app is started;
 		tabletBeaconX=0;
 		tabletBeaconY=0;
+		
+		interval = 1000;
 		
 		//set bitmap false;
 		bitmapFlag = false;
@@ -173,7 +175,6 @@ public class MainActivity extends Activity {
 			intent.putExtra(MainActivity.SEND_PORT, sendPort);
 			intent.putExtra(MainActivity.HOST_IP, hostIP);
 			intent.putExtra(MainActivity.INTERVAL, interval);
-			intent.putExtra(MainActivity.REPETITION, repetition);
 			startActivityForResult(intent, SETTING_REQUEST);
 			return true;
 		case R.id.action_show_hide_map:
@@ -198,7 +199,7 @@ public class MainActivity extends Activity {
 		//start new thread to listen with the new port
 		uDPReceiverService.run(receivePort);
 		message =  createTabletBeaconMessage(RESUME);
-		uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
+		uDPSenderServiceContinuous.run(hostIP, sendPort, interval, 0, message);
 	}
 
 	@Override
@@ -227,7 +228,7 @@ public class MainActivity extends Activity {
 				byte[] message = createTabletBeaconMessage(BUTTON_CALL);
 				Log.d(TAG, "size result:" + message.length);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
+				uDPSenderServiceContinuous.run(hostIP, sendPort, interval, 0, message);
 				break;					
 			}
 		}
@@ -241,8 +242,7 @@ public class MainActivity extends Activity {
 			if (resultCode == RESULT_OK) {
 				hostIP = intent.getStringExtra(MainActivity.HOST_IP);
 				sendPort = intent.getIntExtra(MainActivity.SEND_PORT, -1);
-				repetition = intent.getIntExtra(MainActivity.REPETITION, -1);
-				interval = intent.getIntExtra(MainActivity.INTERVAL, -1);
+				interval = intent.getIntExtra(MainActivity.INTERVAL, 1000);
 				receivePort = intent.getIntExtra(MainActivity.RECEIVE_PORT, DEFAULT_RECEIVE_PORT);
 				informUserSetting();
 			}
@@ -302,9 +302,8 @@ public class MainActivity extends Activity {
 		String message = "Configuration: \n";
 		if(!hostIP.contentEquals("")){message += "Host: " + hostIP + "\n";}
 		if(sendPort > 0){message += "Send port: " + sendPort + "\n";}
-		if(repetition > 0){message += "Send repetition: " + repetition + "\n";}
 		if(interval > 0){message += "Send interval: " + interval + " (ms) \n";}
-		if(receivePort > 0){message += "Receive port: " + receivePort + "\n";}
+		if(receivePort > 0){message += "Receive port: " + receivePort;}
 		
 		//check whether any value has been set
 		if(message.contentEquals("Configuration: \n")){message = "No configuration";}
@@ -349,7 +348,7 @@ public class MainActivity extends Activity {
 				byte[] message = createTabletBeaconMessage(MAP_CALL);
 				Log.d(TAG, "x:" + xCoordinate + ", y:" + yCoordinate);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
+				uDPSenderServiceContinuous.run(hostIP, sendPort, interval, 0, message);
 				break;
 			}
 			return false;
