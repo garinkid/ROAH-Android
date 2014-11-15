@@ -14,9 +14,7 @@ public class Setting extends Activity{
 	EditText receivePortInput, 
 	  sendPortInput,
 	  hostIPInput,
-	  timeoutInput,
 	  repetitionInput,
-	  trialInput,
 	  intervalInput;
 
 	String hostIP;
@@ -27,9 +25,7 @@ public class Setting extends Activity{
 	int sendPort,
 	  receivePort,
 	  interval,
-	  repetition,
-	  trial,
-	  timeout;
+	  repetition;
 	
 	boolean buttonOkPressed;
 	
@@ -68,8 +64,6 @@ public class Setting extends Activity{
 		receivePort = editTextViewInput(receivePortInput);
 		sendPort = editTextViewInput(sendPortInput);
 		interval = editTextViewInput(intervalInput);
-		timeout = editTextViewInput(timeoutInput);
-		trial = editTextViewInput(trialInput);
 		repetition =  editTextViewInput(repetitionInput);
 
 	}
@@ -99,8 +93,6 @@ public class Setting extends Activity{
 				receivePort = editTextViewInput(receivePortInput);
 				sendPort = editTextViewInput(sendPortInput);
 				interval = editTextViewInput(intervalInput);
-				timeout = editTextViewInput(timeoutInput);
-				trial = editTextViewInput(trialInput);
 				repetition =  editTextViewInput(repetitionInput);
 				hostIP = hostIPInput.getText().toString();
 				

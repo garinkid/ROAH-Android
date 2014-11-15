@@ -75,26 +75,6 @@
 			</TableRow>
 			<TableRow android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
-				android:orientation="horizontal">
-				<TextView style="@style/setting_variable_text"  
-					android:text="@string/timeout" />
-				<EditText style="@style/setting_variable_edit_text" 
-					android:hint="@string/timeout"
-					android:id="@+id/receive_timeout_input"
-					android:inputType="number"/>
-			</TableRow>
-			<TableRow android:layout_height="wrap_content"
-				android:layout_width="fill_parent"
-				android:orientation="horizontal">
-				<TextView style="@style/setting_variable_text" 
-					android:text="@string/trial" />
-				<EditText style="@style/setting_variable_edit_text" 
-					android:hint="@string/trial"
-					android:id="@+id/receive_trial_input"
-					android:inputType="number"/>
-			</TableRow>
-			<TableRow android:layout_height="wrap_content"
-				android:layout_width="fill_parent"
 				android:orientation="horizontal"
 				android:padding="20dp">
 				<Button style="@style/button"

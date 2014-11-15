@@ -72,8 +72,7 @@ public class MainActivity extends Activity {
 	
 	TextView activityLog;
 	
-	Button setting, 
-	  listen, 
+	Button setting,
 	  callRobot,
 	  map;
 	
@@ -122,12 +121,10 @@ public class MainActivity extends Activity {
 		//set buttons
 		setting = (Button)findViewById(R.id.setting_button);
 		callRobot = (Button)findViewById(R.id.call_robot_button);
-		listen = (Button)findViewById(R.id.listen_button);
 		map = (Button)findViewById(R.id.map_button);
 		map.setOnClickListener(onClick);
 		setting .setOnClickListener(onClick);
 		callRobot.setOnClickListener(onClick);
-		listen.setOnClickListener(onClick);
 		
 		//set map view
 		mapView = (ImageView)findViewById(R.id.map);
@@ -361,7 +358,6 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 				}
 			}else{
-				listen.setText("Listen");
 				listening = false;
 			}
 		}

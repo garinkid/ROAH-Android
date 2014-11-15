@@ -32,15 +32,6 @@
 		        android:id="@+id/setting_button"
 		        android:text="@string/action_settings"/>
 		    <View style = "@style/view_separator_horizontal" />
-
-		    <Button
-		        android:id="@+id/listen_button"
-		        style="@style/button"
-		        android:layout_width="fill_parent"
-		        android:layout_height="wrap_content"
-		        android:text="@string/listen" />
-
-		    <View style = "@style/view_separator_horizontal" />
 		    <Button style="@style/button" 
 		        android:layout_width="fill_parent"
 		        android:layout_height="wrap_content"
