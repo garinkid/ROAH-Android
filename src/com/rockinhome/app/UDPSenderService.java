@@ -28,6 +28,8 @@ public class UDPSenderService extends Thread{
 	public static final String TAG="UDPSend",
 	  MESSAGE = "message";
 	
+	public static int CONTINUOUS_INTERVAL = 1000; //milisecond 
+	
 	public boolean running;
 	
 	int interval, 
@@ -44,17 +46,27 @@ public class UDPSenderService extends Thread{
 		this.context = context;
 	}
 	
-	public void run(Intent intent) {
+	public void run(String host, int port, int interval, int repetition, byte[] message) {
 		Log.d("UDP", "is called");
-		host = intent.getStringExtra(MainActivity.HOST_IP);
-		port = intent.getIntExtra(MainActivity.SEND_PORT, 666);
-		interval = intent.getIntExtra(MainActivity.INTERVAL, 10);
-		repetition = intent.getIntExtra(MainActivity.REPETITION, 10);
-		message = intent.getByteArrayExtra(MESSAGE);
-		Log.d(TAG, "Host: " + host + ", port: " + port);
+		this.host = host;
+		this.port = port;
+		this.interval = interval;
+		this.repetition = repetition;
+		this.message = message;
+		//set interval to default interval value for continuous sending
+		if(repetition==0){this.interval = CONTINUOUS_INTERVAL;};
+		Log.d(TAG, "Host: " + this.host + ", port: " + this.port);
 		running = true;
 		Log.d("TAG", "calling UDP");
 		new UDPSenderAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+	}
+	
+	public void setMessage(byte[] message){
+		this.message = message;
+	}
+	
+	public void interrupt(){
+		this.running = false;
 	}
 	
 	public class UDPSenderAsyncTask extends AsyncTask<Void, Integer, Boolean>{
@@ -63,8 +75,7 @@ public class UDPSenderService extends Thread{
 		protected Boolean doInBackground(Void... Void) {
 			// create message
 			DatagramSocket socket = null;
-			byte[] messageByte = message;
-			Log.d(TAG, "Size send:" + messageByte.length);
+			Log.d(TAG, "Size send:" + message.length);
 			// create socket
 			try {
 				socket = new DatagramSocket();
@@ -79,33 +90,31 @@ public class UDPSenderService extends Thread{
 				e1.printStackTrace();
 			}
 			
-			for(int i = 0; i<repetition; i++){
-				try {
-					/*
-					ByteBuffer buf = ByteBuffer.allocateDirect(messageByte.length + 12).order(ByteOrder.BIG_ENDIAN);
-					EnumDescriptor desc = TabletBeacon.getDescriptor().findEnumTypeByName("CompType");
-					int cmp_id = desc.findValueByName("COMP_ID").getNumber();
-					int msg_id = desc.findValueByName("MSG_TYPE").getNumber();
-					byte[] cmpID = 	ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putShort((short)cmp_id).array();
-					byte[] msgId = 	ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putShort((short)msg_id).array();
-					buf.putInt(2);
-					buf.putInt(messageByte.length + 4);
-					buf.put(cmpID);
-					buf.put(msgId);
-					buf.put(messageByte);		
-					*/	
-					DatagramPacket datagramPacket = new DatagramPacket(messageByte, messageByte.length, InetAddress.getByName(host), port);
-					//DatagramChannel channel = DatagramChannel.open();
-					//channel.send(buf, new InetSocketAddress(host, port));
-					socket.send(datagramPacket);
-					SystemClock.sleep(interval);
-					//Log.d("TAG", "send to" + host + ": " + port);
-				} catch (SocketException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+			if(repetition == 0)
+			{
+				while(running){
+					try {
+						DatagramPacket datagramPacket = new DatagramPacket(message, message.length, InetAddress.getByName(host), port);
+						socket.send(datagramPacket);
+						SystemClock.sleep(interval);
+					} catch (SocketException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}	
+				}
+			}else
+			{
+				for(int i = 0; i<repetition; i++){
+					try {
+						DatagramPacket datagramPacket = new DatagramPacket(message, message.length, InetAddress.getByName(host), port);
+						socket.send(datagramPacket);
+						SystemClock.sleep(interval);
+					} catch (SocketException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			Intent broadcastActivityIntent = new Intent(MainActivity.ACTIVITY_LOG);

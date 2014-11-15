@@ -47,16 +47,20 @@ public class MainActivity extends Activity {
 			  ACTIVITY_LOG="activity log";
 	
 	public final static int BUTTON_CALL = 1,
-			MAP_CALL = 2;
+			MAP_CALL = 2,
+			RESUME = 3;
 	
 	public final static int DEFAULT_RECEIVE_PORT = 6666;
 
 	int sendPort,
 	  receivePort,
 	  interval,
-	  repetition,
-	  trial,
-	  timeout;
+	  repetition;
+	
+	double tabletBeaconX,
+	  tabletBeaconY;
+	
+	byte[] message;
 
 	boolean connectionFlag,
 	  listening;
@@ -88,7 +92,8 @@ public class MainActivity extends Activity {
 	
 	UDPReceiverService uDPReceiverService;
 	
-	UDPSenderService uDPSenderService;
+	UDPSenderService uDPSenderServiceContinuous,
+	  uDPSenderServiceCall;
 	
 	SharedPreferences preferences;
 	
@@ -140,12 +145,16 @@ public class MainActivity extends Activity {
 		listening=false;
 		
 		uDPReceiverService = new UDPReceiverService(getBaseContext());
-		uDPSenderService = new UDPSenderService(getBaseContext());
-
+		uDPSenderServiceContinuous = new UDPSenderService(getBaseContext());
+		uDPSenderServiceCall = new UDPSenderService(getBaseContext());
 		
 		//set last time to zero the app is activated
 		lastCallTime = Time.newBuilder().setSec(0).setNsec(0).build();
 		lastPoseTime = Time.newBuilder().setSec(0).setNsec(0).build();
+		
+		//TabletBeacon coordinate when the app is started;
+		tabletBeaconX=0;
+		tabletBeaconY=0;
 	}
 
 	@Override
@@ -159,10 +168,14 @@ public class MainActivity extends Activity {
 		super.onResume();
 		registerReceiver(packageReceiver, intentFilterPackage);
 		registerReceiver(logReceiver, intentFilterLog);
+		
 		//stop currently running thread
 		uDPReceiverService.interrupt();
+		uDPSenderServiceContinuous.interrupt();
 		//start new thread to listen with the new port
 		uDPReceiverService.run(receivePort);
+		message =  createTabletBeaconMessage(RESUME);
+		uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
 	}
 
 	@Override
@@ -171,20 +184,13 @@ public class MainActivity extends Activity {
 		unregisterReceiver(logReceiver);
 		//stop currently running thread
 		uDPReceiverService.interrupt();
+		uDPSenderServiceContinuous.interrupt();
 		super.onPause();
 	}
 
 	@Override
 	protected void onStop(){
 		super.onStop();
-		SharedPreferences.Editor editor = preferences.edit();
-		editor.putInt(MainActivity.RECEIVE_PORT, receivePort);
-		editor.putInt(MainActivity.INTERVAL, interval);
-		editor.putInt(MainActivity.SEND_PORT, sendPort);
-		editor.putInt(MainActivity.REPETITION, repetition);
-		editor.putString(MainActivity.HOST_IP,hostIP);
-		editor.commit();
-		Log.d("Save state", "State saved");
 	}
 
 	
@@ -195,9 +201,12 @@ public class MainActivity extends Activity {
 			switch(view.getId()){
 			case R.id.call_robot_button:
 				Log.d(TAG, "Call robot button is pressed");
-				byte[] message = createTabletBeaconMessage(0.0, 0.0, BUTTON_CALL);
+				setTabletBeaconCoordinate(0, 0);
+				byte[] message = createTabletBeaconMessage(BUTTON_CALL);
 				Log.d(TAG, "size result:" + message.length);
-				sendMessage(message);
+				uDPSenderServiceContinuous.interrupt();
+				uDPSenderServiceCall.run(hostIP, sendPort, repetition, interval, message);
+				uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
 				break;	
 			case R.id.setting_button:
 				intent = new Intent(context, Setting.class);
@@ -238,15 +247,12 @@ public class MainActivity extends Activity {
 		}
 	}
 	
-	protected byte[] createTabletBeaconMessage(double x, double y, int method) {
-		TabletBeacon robotCall = TabletBeacon.newBuilder()
-		  .setLastCall(lastCallTime)
-		  .setLastPos(lastPoseTime)
-		  .setX(x)
-		  .setY(y).build();
-		
-		Log.d(TAG, "TabletBeacon: x=" +  x + ",y=" + y + ",lastCall=" + lastCallTime.getSec() +
-		  ",lastPose" + lastPoseTime.getSec());
+	protected void setTabletBeaconCoordinate(double x, double y){
+		tabletBeaconX = x;
+		tabletBeaconY = y;
+	}
+	
+	protected byte[] createTabletBeaconMessage(int method) {
 		
 		//set last call
 		long unixTime = System.currentTimeMillis();
@@ -254,9 +260,20 @@ public class MainActivity extends Activity {
 		long nsec = (unixTime%1000L) * 1000;
 		if(method == BUTTON_CALL){
 			lastCallTime = Time.newBuilder().setSec(sec).setNsec(nsec).build();
-		}else{
+		}else if(method == MAP_CALL){
 			lastPoseTime = Time.newBuilder().setSec(sec).setNsec(nsec).build();
+		}else if(method == RESUME){
+			//do nothing
 		}
+		
+		TabletBeacon robotCall = TabletBeacon.newBuilder()
+		  .setLastCall(lastCallTime)
+		  .setLastPos(lastPoseTime)
+		  .setX(tabletBeaconX)
+		  .setY(tabletBeaconY).build();
+		
+		Log.d(TAG, "TabletBeacon: x=" +  tabletBeaconX + ",y=" + tabletBeaconY + ",lastCall=" + lastCallTime.getSec() +
+		  ",lastPose" + lastPoseTime.getSec());
 		
 		//Serialize the message
 		//12 extra bytes for: 
@@ -277,16 +294,6 @@ public class MainActivity extends Activity {
 		buf.rewind();
 		return buf.array();
 	}
-	
-	private void sendMessage(byte[] message){
-		Intent intent = new Intent(context, UDPSenderService.class);
-		intent.putExtra(MainActivity.SEND_PORT,sendPort);
-		intent.putExtra(MainActivity.HOST_IP,hostIP);
-		intent.putExtra(MainActivity.INTERVAL,interval);
-		intent.putExtra(MainActivity.REPETITION, repetition);
-		intent.putExtra(UDPSenderService.MESSAGE, message);
-		uDPSenderService.run(intent);
-	}
 
 	protected void informUserSetting(){
 		// Collect value
@@ -296,8 +303,6 @@ public class MainActivity extends Activity {
 		if(repetition > 0){message += "Send repetition: " + repetition + "\n";}
 		if(interval > 0){message += "Send interval: " + interval + " (ms) \n";}
 		if(receivePort > 0){message += "Receive port: " + receivePort + "\n";}
-		if(timeout > 0){message += "Receive timeout: " + timeout + " (ms) \n";}
-		if(trial > 0){message += "Receive trial: " + trial;}
 		
 		//check whether any value has been set
 		if(message.contentEquals("Configuration: \n")){message = "No configuration";}
@@ -325,8 +330,11 @@ public class MainActivity extends Activity {
 				viewToMapYScale = mapYsize / mapView.getHeight();
 				double xCoordinate = event.getX() * viewToMapXScale; 
 				double yCoordinate = event.getY()* viewToMapYScale;
-				byte[] message = createTabletBeaconMessage(xCoordinate, yCoordinate, MAP_CALL);
-				sendMessage(message);
+				setTabletBeaconCoordinate(xCoordinate, yCoordinate);
+				byte[] message = createTabletBeaconMessage(MAP_CALL);
+				uDPSenderServiceContinuous.interrupt();
+				uDPSenderServiceCall.run(hostIP, sendPort, repetition, interval, message);
+				uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
 				break;
 			}
 			return false;
