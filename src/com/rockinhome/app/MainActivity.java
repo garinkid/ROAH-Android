@@ -1,7 +1,5 @@
 package com.rockinhome.app;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -21,6 +19,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.format.DateFormat;
@@ -62,7 +65,7 @@ public class MainActivity extends Activity {
 	
 	byte[] message;
 
-	boolean connectionFlag,
+	boolean bitmapFlag,
 	  listening;
 	
 	static final int SETTING_REQUEST = 1;
@@ -76,9 +79,7 @@ public class MainActivity extends Activity {
 	
 	TextView activityLog;
 	
-	Button setting,
-	  callRobot,
-	  map;
+	Button callRobot;
 	
 	ImageView mapView;
 	
@@ -92,8 +93,7 @@ public class MainActivity extends Activity {
 	
 	UDPReceiverService uDPReceiverService;
 	
-	UDPSenderService uDPSenderServiceContinuous,
-	  uDPSenderServiceCall;
+	UDPSenderService uDPSenderServiceContinuous;
 	
 	SharedPreferences preferences;
 	
@@ -124,11 +124,7 @@ public class MainActivity extends Activity {
 		informUserSetting();
 		
 		//set buttons
-		setting = (Button)findViewById(R.id.setting_button);
 		callRobot = (Button)findViewById(R.id.call_robot_button);
-		map = (Button)findViewById(R.id.map_button);
-		map.setOnClickListener(onClick);
-		setting .setOnClickListener(onClick);
 		callRobot.setOnClickListener(onClick);
 		
 		//set map view
@@ -146,7 +142,6 @@ public class MainActivity extends Activity {
 		
 		uDPReceiverService = new UDPReceiverService(getBaseContext());
 		uDPSenderServiceContinuous = new UDPSenderService(getBaseContext());
-		uDPSenderServiceCall = new UDPSenderService(getBaseContext());
 		
 		//set last time to zero the app is activated
 		lastCallTime = Time.newBuilder().setSec(0).setNsec(0).build();
@@ -155,6 +150,9 @@ public class MainActivity extends Activity {
 		//TabletBeacon coordinate when the app is started;
 		tabletBeaconX=0;
 		tabletBeaconY=0;
+		
+		//set bitmap false;
+		bitmapFlag = false;
 	}
 
 	@Override
@@ -162,6 +160,31 @@ public class MainActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
+	}
+	
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		switch(id){
+		case R.id.action_settings:
+			Intent intent = new Intent(context, Setting.class);
+			intent.putExtra(MainActivity.RECEIVE_PORT, receivePort);
+			intent.putExtra(MainActivity.SEND_PORT, sendPort);
+			intent.putExtra(MainActivity.HOST_IP, hostIP);
+			intent.putExtra(MainActivity.INTERVAL, interval);
+			intent.putExtra(MainActivity.REPETITION, repetition);
+			startActivityForResult(intent, SETTING_REQUEST);
+			return true;
+		case R.id.action_show_hide_map:
+			if(mapView.isShown()){
+				mapView.setVisibility(View.INVISIBLE);
+			}else{
+				mapView.setVisibility(View.VISIBLE);
+			}
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	protected void onResume() {
@@ -197,7 +220,6 @@ public class MainActivity extends Activity {
 	private OnClickListener onClick = new OnClickListener(){
 		@Override
 		public void onClick(View view) {
-			Intent intent;
 			switch(view.getId()){
 			case R.id.call_robot_button:
 				Log.d(TAG, "Call robot button is pressed");
@@ -205,28 +227,8 @@ public class MainActivity extends Activity {
 				byte[] message = createTabletBeaconMessage(BUTTON_CALL);
 				Log.d(TAG, "size result:" + message.length);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceCall.run(hostIP, sendPort, repetition, interval, message);
 				uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
-				break;	
-			case R.id.setting_button:
-				intent = new Intent(context, Setting.class);
-				intent.putExtra(MainActivity.RECEIVE_PORT, receivePort);
-				intent.putExtra(MainActivity.SEND_PORT, sendPort);
-				intent.putExtra(MainActivity.HOST_IP, hostIP);
-				intent.putExtra(MainActivity.INTERVAL, interval);
-				intent.putExtra(MainActivity.REPETITION, repetition);
-				startActivityForResult(intent, SETTING_REQUEST);
-				break;
-			case R.id.map_button:
-				if(mapView.isShown()){
-					mapView.setVisibility(View.INVISIBLE);
-					map.setText("Show map");
-				}else{
-					mapView.setVisibility(View.VISIBLE);
-					map.setText("Hide map");
-				}
-				break;
-				
+				break;					
 			}
 		}
 	};
@@ -326,14 +328,27 @@ public class MainActivity extends Activity {
 			switch(v.getId()){
 			case R.id.map:
 				Log.d(TAG, "height:" + mapView.getHeight() + "width:" + mapView.getWidth());
+				
+				//update image
+				mapView.setImageResource(R.drawable.defaultmap);
+				mapView.buildDrawingCache();
+				Bitmap mapBitmap = mapView.getDrawingCache();
+				Canvas canvas = new Canvas(mapBitmap);
+			    Paint paint = new Paint();
+			    paint.setColor(Color.RED);
+			    canvas.drawCircle((float)event.getX(), (float)event.getY(), (float)30 , paint);
+			    mapView.setImageDrawable(null);
+			    mapView.setImageDrawable(new BitmapDrawable(getResources(), mapBitmap));
+
+			    //send message
 				viewToMapXScale = mapXsize / mapView.getWidth();
 				viewToMapYScale = mapYsize / mapView.getHeight();
 				double xCoordinate = event.getX() * viewToMapXScale; 
 				double yCoordinate = event.getY()* viewToMapYScale;
 				setTabletBeaconCoordinate(xCoordinate, yCoordinate);
 				byte[] message = createTabletBeaconMessage(MAP_CALL);
+				Log.d(TAG, "x:" + xCoordinate + ", y:" + yCoordinate);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceCall.run(hostIP, sendPort, repetition, interval, message);
 				uDPSenderServiceContinuous.run(hostIP, sendPort, 0, 0, message);
 				break;
 			}
@@ -341,15 +356,6 @@ public class MainActivity extends Activity {
 		}
 		
 	};
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
 
 	BroadcastReceiver packageReceiver = new BroadcastReceiver () {
 		@Override

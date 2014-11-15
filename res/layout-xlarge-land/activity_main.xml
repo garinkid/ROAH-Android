@@ -26,26 +26,15 @@
 			android:layout_weight="12"
 		    android:layout_height="wrap_content"
 		    android:orientation="vertical">
-		    <Button style="@style/button_xlarge"
-		        android:layout_width="fill_parent"
-		        android:layout_height="wrap_content"
-		        android:id="@+id/setting_button"
-		        android:text="@string/action_settings"/>
-		    <View style = "@style/view_separator_horizontal_xlarge" />
 		    <Button style="@style/button_xlarge" 
 		        android:layout_width="fill_parent"
-		        android:layout_height="wrap_content"
+		        android:layout_height="200dp"
 		        android:id="@+id/call_robot_button"
 		        android:text="@string/call_robot"/>
-		    <View style = "@style/view_separator_horizontal_xlarge" />
-			<Button style="@style/button_xlarge" 
-			    android:layout_width="fill_parent"
-		        android:layout_height="wrap_content"
-		        android:id="@+id/map_button"
-		        android:text="@string/show_map"/>
 		</TableLayout>
 		<View style = "@style/view_separator_vertical_xlarge" />
-	    <ImageView
+	    <com.rockinhome.app.MapView
+	        android:contentDescription="@string/map"
 	        android:id="@+id/map"
 	        android:layout_weight="3" 
 	        android:layout_height="fill_parent"

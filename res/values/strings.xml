@@ -4,6 +4,8 @@
 	<!-- common -->
 	<string name="app_name">RoCKIn@Home</string>
 	<string name="action_settings">Setting</string>
+	<string name="action_show_hide_map">Show/Hide Map</string>
+	<string name="map">Map</string>
 
 	<!-- setting -->
 	<string name="host_ip">Host</string>
@@ -21,6 +23,5 @@
 	<!-- main layout -->
 	<string name="listen">Listen</string>
 	<string name="call_robot">Call Robot</string>
-	<string name="show_map">Show map</string>
 
 </resources>

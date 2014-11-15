@@ -61,10 +61,6 @@ public class UDPSenderService extends Thread{
 		new UDPSenderAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 	
-	public void setMessage(byte[] message){
-		this.message = message;
-	}
-	
 	public void interrupt(){
 		this.running = false;
 	}
