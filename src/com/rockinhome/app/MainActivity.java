@@ -69,11 +69,6 @@ public class MainActivity extends Activity {
 	
 	static final int SETTING_REQUEST = 1;
 	
-	double viewToMapXScale,
-	  viewToMapYScale,
-	  mapXsize = 9.0, // in meter
-	  mapYsize = 6.0; // in meter
-	
 	String hostIP;
 	
 	TextView activityLog;
@@ -328,6 +323,21 @@ public class MainActivity extends Activity {
 			case R.id.map:
 				Log.d(TAG, "height:" + mapView.getHeight() + "width:" + mapView.getWidth());
 				
+			    double mapLength =  9; //meter
+			    double mapHeight = 9; //meter
+			    double mapOffsetLength = 4.0; //meter
+			    double mapOffsetHeight = 5.0; //meter
+				double viewToMapLengthScale = mapLength / mapView.getWidth();
+				double viewToMapHeightScale = mapHeight / mapView.getHeight();
+				
+				float touchX =  event.getX();
+				float touchY = event.getY();
+				
+				//debugging
+				
+				//touchX = (float) (5.0 / viewToMapLengthScale);
+				//touchY = (float) (4.0 / viewToMapHeightScale);
+				
 				//update image
 				mapView.setImageResource(R.drawable.defaultmap);
 				mapView.buildDrawingCache();
@@ -335,15 +345,13 @@ public class MainActivity extends Activity {
 				Canvas canvas = new Canvas(mapBitmap);
 			    Paint paint = new Paint();
 			    paint.setColor(Color.RED);
-			    canvas.drawCircle((float)event.getX(), (float)event.getY(), (float)30 , paint);
+			    canvas.drawCircle(touchX, touchY, (float)30 , paint);
 			    mapView.setImageDrawable(null);
 			    mapView.setImageDrawable(new BitmapDrawable(getResources(), mapBitmap));
 
 			    //send message
-				viewToMapXScale = mapXsize / mapView.getWidth();
-				viewToMapYScale = mapYsize / mapView.getHeight();
-				double xCoordinate = event.getX() * viewToMapXScale; 
-				double yCoordinate = event.getY()* viewToMapYScale;
+				double xCoordinate = mapHeight - mapOffsetHeight - (event.getY() * viewToMapHeightScale);
+				double yCoordinate = mapLength - mapOffsetLength - (event.getX() * viewToMapLengthScale);
 				setTabletBeaconCoordinate(xCoordinate, yCoordinate);
 				byte[] message = createTabletBeaconMessage(MAP_CALL);
 				Log.d(TAG, "x:" + xCoordinate + ", y:" + yCoordinate);
