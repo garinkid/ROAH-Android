@@ -4,8 +4,6 @@ import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.robocup_logistics.llsf_msgs.BeaconSignalProtos.BeaconSignal;
-
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 
@@ -423,11 +421,6 @@ public class MainActivity extends Activity {
 			Log.d("UDP", "robot name: " + robotBeacon.getRobotName().toString() + 
 				", team name: " + robotBeacon.getTeamName().toString() +
 				", time: " + robotBeacon.getTime().toString());
-		}else if(msgId ==1){
-			//message is BeaconSignal from org.robocup_logistic.llsf_msgs
-			messageType = "BeaconSignal"; 
-			BeaconSignal beaconSignal = BeaconSignal.parseFrom(protobuf);
-			Log.d("UDP", "robot name: " + beaconSignal.getTeamName());
 		}else if(msgId == 10){
 			//message is RoahRsbbBeacon from eu.rockin.roah_rsbb_msgs
 			messageType = "RoahRsbbBeacon"; 
