@@ -45,6 +45,14 @@
        <item name="android:textColor">@android:color/black</item>
    </style>
    
+   <style name="setting_info_text">
+       <item name="android:background">@android:color/transparent</item>
+       <item name="android:padding">20dip</item>
+       <item name="android:textSize">16sp</item>
+       <item name="android:textStyle">italic</item>
+       <item name="android:textColor">@android:color/darker_gray</item>
+   </style>
+   
    <style name="setting_variable_text">
        <item name="android:background">@android:color/transparent</item>
        <item name="android:textSize">18sp</item>
@@ -55,6 +63,11 @@
    
     <style name="setting_variable_edit_text">
        <item name="android:textSize">16sp</item>
+       <item name="android:layout_weight">0.4</item>
+       <item name="android:layout_height">wrap_content</item>
+   </style>
+   
+   <style name="setting_variable_switch">
        <item name="android:layout_weight">0.4</item>
        <item name="android:layout_height">wrap_content</item>
    </style>

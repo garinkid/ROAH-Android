@@ -1,23 +1,16 @@
+/* 
+ * This file is part of the RoCKIn@Home Android App.
+ * Author: Rhama Dwiputra
+ * 
+ */
+
 package com.rockinhome.app;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
-import java.nio.channels.DatagramChannel;
-import java.nio.channels.SocketChannel;
-
-import com.google.protobuf.Descriptors.EnumDescriptor;
-
-import eu.rockin.roah_rsbb_msgs.TabletBeaconProtos.TabletBeacon;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -28,7 +21,7 @@ public class UDPSenderService extends Thread{
 	public static final String TAG="UDPSend",
 	  MESSAGE = "message";
 	
-	public static int CONTINUOUS_INTERVAL = 1000; //milisecond 
+	public static final int CONTINUOUS_INTERVAL = 1000; //milisecond 
 	
 	public boolean running;
 	
@@ -50,11 +43,12 @@ public class UDPSenderService extends Thread{
 		Log.d("UDP", "is called");
 		this.host = host;
 		this.port = port;
-		this.interval = interval;
 		this.repetition = repetition;
+		this.interval = interval;
 		this.message = message;
-		//set interval to default interval value for continuous sending
-		if(repetition==0){this.interval = CONTINUOUS_INTERVAL;};
+		if(repetition==0){
+			this.interval = CONTINUOUS_INTERVAL;
+		};
 		Log.d(TAG, "Host: " + this.host + ", port: " + this.port);
 		running = true;
 		Log.d("TAG", "calling UDP");
@@ -73,21 +67,19 @@ public class UDPSenderService extends Thread{
 			DatagramSocket socket = null;
 			Log.d(TAG, "Size send:" + message.length);
 			// create socket
-			try {
+			try{
 				socket = new DatagramSocket();
 				//socket.setReuseAddress(true);
 				socket.setBroadcast(true);
 				Log.d("UDP", "socket created");
 				
 			} catch (SocketException e1) {
-				// TODO Auto-generated catch block
 				Log.e("UDPReceiverService", "Fail creating a socket");
 				this.cancel(true);
 				e1.printStackTrace();
 			}
 			
-			if(repetition == 0)
-			{
+			if(repetition == 0){
 				while(running){
 					try {
 						DatagramPacket datagramPacket = new DatagramPacket(message, message.length, InetAddress.getByName(host), port);
@@ -99,8 +91,7 @@ public class UDPSenderService extends Thread{
 						e.printStackTrace();
 					}	
 				}
-			}else
-			{
+			}else{
 				for(int i = 0; i<repetition; i++){
 					try {
 						DatagramPacket datagramPacket = new DatagramPacket(message, message.length, InetAddress.getByName(host), port);
@@ -120,7 +111,6 @@ public class UDPSenderService extends Thread{
 			context.sendBroadcast(broadcastActivityIntent);
 			socket.disconnect();
 			socket.close();
-			// TODO Auto-generated method stub
 			return null;
 		}
 		

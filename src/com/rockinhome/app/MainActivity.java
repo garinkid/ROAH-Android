@@ -1,3 +1,9 @@
+/* 
+ * This file is part of the RoCKIn@Home Android App.
+ * Author: Rhama Dwiputra
+ * 
+ */
+
 package com.rockinhome.app;
 
 import java.net.DatagramPacket;
@@ -39,43 +45,35 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-	public final static String RECEIVE_PORT="receive port",
-			  SEND_PORT="send port",
-			  HOST_IP="host ip",
-			  INTERVAL="interval",
-			  TAG = "Main activity",
-			  ACTIVITY_LOG="activity log";
+	public final static String TAG = "Main activity",
+	  ACTIVITY_LOG="activity log";
 	
 	public final static int BUTTON_CALL = 1,
-			MAP_CALL = 2,
-			RESUME = 3;
-	
-	public final static int DEFAULT_RECEIVE_PORT = 6666;
+	  MAP_CALL = 2,
+	  RESUME = 3;
 
-	int sendPort,
-	  receivePort,
-	  interval,
-	  repetition;
-	
 	double tabletBeaconX,
 	  tabletBeaconY;
 	
 	byte[] message;
 
-	boolean bitmapFlag,
-	  listening;
+	boolean listening;
 	
-	static final int SETTING_REQUEST = 1;
-	
-	String hostIP;
+	static final int CONNECTION_CONFIGURATION_REQUEST = 1,
+	  MAP_CONFIGURATION_REQUEST = 2;
 	
 	TextView activityLog;
 	
-	Button callRobot;
+	Button callRobot,
+	  quit;
 	
 	ImageView mapView;
 	
 	Context context;
+	
+	Map map;
+	
+	UDPConfig uDPConfig;
 	
 	Time lastCallTime,
 	  lastPoseTime;
@@ -84,70 +82,63 @@ public class MainActivity extends Activity {
 	  intentFilterLog;
 	
 	UDPReceiverService uDPReceiverService;
-	
 	UDPSenderService uDPSenderServiceContinuous;
 	
 	SharedPreferences preferences;
 	
+	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		context = getBaseContext();
 
 		//collect previously set values
 		preferences =  PreferenceManager.getDefaultSharedPreferences(this);
-		//In the case where it is decided to use previous config as default config
-		/*
-		hostIP = preferences.getString(MainActivity.HOST_IP, "");
-		sendPort = preferences.getInt(MainActivity.SEND_PORT, -1);
-		repetition = preferences.getInt(MainActivity.REPETITION, -1);
-		interval = preferences.getInt(MainActivity.INTERVAL, -1);
-		receivePort = preferences.getInt(MainActivity.RECEIVE_PORT, -1);
-		timeout = preferences.getInt(MainActivity.TIMEOUT, -1);
-		trial = preferences.getInt(MainActivity.TRIAL, -1);
-		*/
+
+		map = new Map();
+		map.getFromPreference(preferences);
+		
 		//using predefine value as config:
-		hostIP = "10.255.255.255";
-		sendPort = 6666;
-		repetition = 1; // not being used TODO  eliminate
-		interval = 1000;
-		receivePort = DEFAULT_RECEIVE_PORT;
-		informUserSetting();
+		//hostIP = "10.255.255.255";
+		uDPConfig = new UDPConfig();
+		uDPConfig.reset();
 		
 		//set buttons
 		callRobot = (Button)findViewById(R.id.call_robot_button);
+		quit = (Button)findViewById(R.id.quit_button);
 		callRobot.setOnClickListener(onClick);
-		
+		quit.setOnClickListener(onClick);
+
 		//set map view
 		mapView = (ImageView)findViewById(R.id.map);
 		mapView.setOnTouchListener(onTouch);
-		
+
 		//hide map by default
 		mapView.setVisibility(View.INVISIBLE);
 
+		//activity log
 		activityLog = (TextView)findViewById(R.id.log);
 		activityLog.setVisibility(View.GONE);
 
 		intentFilterPackage = new IntentFilter(UDPReceiverService.RECEIVED_PACKAGE);
 		intentFilterLog = new IntentFilter(ACTIVITY_LOG);
 		listening=false;
-		
+
 		uDPReceiverService = new UDPReceiverService(getBaseContext());
 		uDPSenderServiceContinuous = new UDPSenderService(getBaseContext());
-		
+
 		//set last time to zero the app is activated
 		lastCallTime = Time.newBuilder().setSec(0).setNsec(0).build();
 		lastPoseTime = Time.newBuilder().setSec(0).setNsec(0).build();
-		
+
 		//TabletBeacon coordinate when the app is started;
 		tabletBeaconX=0;
 		tabletBeaconY=0;
 		
-		interval = 1000;
+		map.loadMapToImageView(mapView);
+		informUser(uDPConfig.getInfo() + "\n\n" + map.getInfo());
 		
-		//set bitmap false;
-		bitmapFlag = false;
 	}
 
 	@Override
@@ -161,14 +152,12 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
+		Intent intent;
 		switch(id){
 		case R.id.action_settings:
-			Intent intent = new Intent(context, Setting.class);
-			intent.putExtra(MainActivity.RECEIVE_PORT, receivePort);
-			intent.putExtra(MainActivity.SEND_PORT, sendPort);
-			intent.putExtra(MainActivity.HOST_IP, hostIP);
-			intent.putExtra(MainActivity.INTERVAL, interval);
-			startActivityForResult(intent, SETTING_REQUEST);
+			intent = new Intent(context, ConfigureConnection.class);
+			intent = uDPConfig.putExtras(intent);
+			startActivityForResult(intent, CONNECTION_CONFIGURATION_REQUEST);
 			return true;
 		case R.id.action_show_hide_map:
 			if(mapView.isShown()){
@@ -177,6 +166,13 @@ public class MainActivity extends Activity {
 				mapView.setVisibility(View.VISIBLE);
 			}
 			return true;
+		case R.id.action_setting_map:
+			intent = new Intent(context, ConfigureMap.class);
+			intent = map.putExtras(intent);
+			startActivityForResult(intent, MAP_CONFIGURATION_REQUEST);
+			return true;
+		case R.id.action_quit:
+			finish();
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -185,21 +181,22 @@ public class MainActivity extends Activity {
 		super.onResume();
 		registerReceiver(packageReceiver, intentFilterPackage);
 		registerReceiver(logReceiver, intentFilterLog);
-		
+
 		//stop currently running thread
 		uDPReceiverService.interrupt();
 		uDPSenderServiceContinuous.interrupt();
+
 		//start new thread to listen with the new port
-		uDPReceiverService.run(receivePort);
+		uDPReceiverService.run(uDPConfig.receivePort);
 		message =  createTabletBeaconMessage(RESUME);
-		uDPSenderServiceContinuous.run(hostIP, sendPort, interval, 0, message);
+		uDPSenderServiceContinuous.run(uDPConfig.hostIP, uDPConfig.sendPort, uDPConfig.interval, 0, message);
 	}
 
 	@Override
 	protected void onPause() {
 		unregisterReceiver(packageReceiver);
 		unregisterReceiver(logReceiver);
-		//stop currently running thread
+		
 		uDPReceiverService.interrupt();
 		uDPSenderServiceContinuous.interrupt();
 		super.onPause();
@@ -208,8 +205,8 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStop(){
 		super.onStop();
+		map.saveToPreference(preferences);
 	}
-
 	
 	private OnClickListener onClick = new OnClickListener(){
 		@Override
@@ -221,8 +218,11 @@ public class MainActivity extends Activity {
 				byte[] message = createTabletBeaconMessage(BUTTON_CALL);
 				Log.d(TAG, "size result:" + message.length);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceContinuous.run(hostIP, sendPort, interval, 0, message);
-				break;					
+				uDPSenderServiceContinuous.run(uDPConfig.hostIP, uDPConfig.sendPort, uDPConfig.interval, 0, message);
+				break;	
+			case R.id.quit_button:
+				finish();
+				break;
 			}
 		}
 	};
@@ -230,16 +230,17 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		// Check which request we're responding to
-		if (requestCode == SETTING_REQUEST) {
-			// Make sure the request was successful
-			if (resultCode == RESULT_OK) {
-				hostIP = intent.getStringExtra(MainActivity.HOST_IP);
-				sendPort = intent.getIntExtra(MainActivity.SEND_PORT, -1);
-				interval = intent.getIntExtra(MainActivity.INTERVAL, 1000);
-				receivePort = intent.getIntExtra(MainActivity.RECEIVE_PORT, DEFAULT_RECEIVE_PORT);
-				informUserSetting();
-			}
+		if (requestCode == CONNECTION_CONFIGURATION_REQUEST && resultCode == RESULT_OK) {
+			uDPConfig.getExtras(intent.getExtras());
+			informUser(uDPConfig.getInfo());
 		}
+		else if (requestCode == MAP_CONFIGURATION_REQUEST && resultCode == RESULT_OK
+		  && null != intent){
+			map.getExtras(intent.getExtras());
+			map.loadMapToImageView(mapView);
+			informUser(map.getInfo());
+		}
+		
 	}
 	
 	protected void setTabletBeaconCoordinate(double x, double y){
@@ -248,7 +249,6 @@ public class MainActivity extends Activity {
 	}
 	
 	protected byte[] createTabletBeaconMessage(int method) {
-		
 		//set last call
 		long unixTime = System.currentTimeMillis();
 		long sec = unixTime / 1000L;
@@ -270,12 +270,14 @@ public class MainActivity extends Activity {
 		Log.d(TAG, "TabletBeacon: x=" +  tabletBeaconX + ",y=" + tabletBeaconY + ",lastCall=" + lastCallTime.getSec() +
 		  ",lastPose" + lastPoseTime.getSec());
 		
-		//Serialize the message
-		//12 extra bytes for: 
-		//4 bytes for frame_header_version 
-		//4 bytes for message byte length + COMP_ID + MSG_TYPE
-		//2 bytes for COMP_ID
-		//2 bytes for MSG_TYPE
+		/* Serialize the message
+		* 12 extra bytes for: 
+		* - 4 bytes for frame_header_version 
+		* - 4 bytes for message byte length
+		* - 2 bytes for COMP_ID
+		* - 2 bytes for MSG_TYPE
+		*/
+		
 		int size = robotCall.getSerializedSize();
 		ByteBuffer buf = ByteBuffer.allocateDirect(size + 12).order(ByteOrder.BIG_ENDIAN);
 		EnumDescriptor desc = TabletBeacon.getDescriptor().findEnumTypeByName("CompType");
@@ -290,21 +292,6 @@ public class MainActivity extends Activity {
 		return buf.array();
 	}
 
-	protected void informUserSetting(){
-		// Collect value
-		String message = "Configuration: \n";
-		if(!hostIP.contentEquals("")){message += "Host: " + hostIP + "\n";}
-		if(sendPort > 0){message += "Send port: " + sendPort + "\n";}
-		if(interval > 0){message += "Send interval: " + interval + " (ms) \n";}
-		if(receivePort > 0){message += "Receive port: " + receivePort;}
-		
-		//check whether any value has been set
-		if(message.contentEquals("Configuration: \n")){message = "No configuration";}
-		
-		//inform user
-		informUser(message);
-	}
-	
 	protected void informUser(String message) {
 		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
 	}
@@ -320,24 +307,10 @@ public class MainActivity extends Activity {
 			switch(v.getId()){
 			case R.id.map:
 				Log.d(TAG, "height:" + mapView.getHeight() + "width:" + mapView.getWidth());
-				
-			    double mapLength =  9; //meter
-			    double mapHeight = 9; //meter
-			    double mapOffsetLength = 4.0; //meter
-			    double mapOffsetHeight = 5.0; //meter
-				double viewToMapLengthScale = mapLength / mapView.getWidth();
-				double viewToMapHeightScale = mapHeight / mapView.getHeight();
-				
 				float touchX =  event.getX();
 				float touchY = event.getY();
-				
-				//debugging
-				
-				//touchX = (float) (5.0 / viewToMapLengthScale);
-				//touchY = (float) (4.0 / viewToMapHeightScale);
-				
 				//update image
-				mapView.setImageResource(R.drawable.defaultmap);
+				map.loadMapToImageView(mapView);
 				mapView.buildDrawingCache();
 				Bitmap mapBitmap = mapView.getDrawingCache();
 				Canvas canvas = new Canvas(mapBitmap);
@@ -348,13 +321,13 @@ public class MainActivity extends Activity {
 			    mapView.setImageDrawable(new BitmapDrawable(getResources(), mapBitmap));
 
 			    //send message
-				double xCoordinate = mapHeight - mapOffsetHeight - (event.getY() * viewToMapHeightScale);
-				double yCoordinate = mapLength - mapOffsetLength - (event.getX() * viewToMapLengthScale);
+				double xCoordinate = map.calculateX(mapView.getWidth(), touchX);
+				double yCoordinate = map.calculateY(mapView.getHeight(), touchY);
 				setTabletBeaconCoordinate(xCoordinate, yCoordinate);
 				byte[] message = createTabletBeaconMessage(MAP_CALL);
 				Log.d(TAG, "x:" + xCoordinate + ", y:" + yCoordinate);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceContinuous.run(hostIP, sendPort, interval, 0, message);
+				uDPSenderServiceContinuous.run(uDPConfig.hostIP, uDPConfig.sendPort, uDPConfig.interval, 0, message);
 				break;
 			}
 			return false;
@@ -362,6 +335,7 @@ public class MainActivity extends Activity {
 		
 	};
 
+	//receiver for UDP message
 	BroadcastReceiver packageReceiver = new BroadcastReceiver () {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -382,6 +356,7 @@ public class MainActivity extends Activity {
 		}
 	};
 	
+	//receiver for log activity
 	BroadcastReceiver logReceiver = new BroadcastReceiver () {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -389,27 +364,27 @@ public class MainActivity extends Activity {
 			writeToLog(message);
 		}
 	};
-	
-	
+
 	protected void translatePacket(DatagramPacket packetData) throws InvalidProtocolBufferException{
 		byte[] header = new byte[12];
 		String messageType;
 		System.arraycopy(packetData.getData(), 0, header, 0, 12);
 		ByteBuffer headerBuff = ByteBuffer.wrap(header);
 		headerBuff.rewind();
-		//for(int i = 0; i<8; i++){Log.d("Read Packet", "Data at: " + i + "->"+ uDPHeader[i]);};
-		//Log.d("Read Packet", "Cheksum: " + uDPHeaderBuf.getShort(6));
-		//get packet length from checksum
+		
 		int frameHeaderVersion = headerBuff.getInt(); //not being used for now 
 		int size = headerBuff.getInt() - 4; 
 		int cmpId = headerBuff.getShort();
 		int msgId = headerBuff.getShort();
+		
 		//4 bytes are used for cmp_id, msg_id
 		//8 bytes are used for udp header;
+		
 		if(size == 0){
 			Log.d("UDP", "message size 0");
 			return;
 		}
+		
 		Log.d("UDP", "Size:" + size + ", cmp_id:" + cmpId + ", msg_id: " + msgId);
 		if(size < 0){return;} // TODO usually happens when simultaneously sending and receiving 
 		byte[] protobuf = new byte[size];
@@ -438,4 +413,5 @@ public class MainActivity extends Activity {
 		}
 		writeToLog("received " + messageType);
 	}
+	
 }

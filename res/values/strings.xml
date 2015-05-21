@@ -3,8 +3,10 @@
 
 	<!-- common -->
 	<string name="app_name">RoCKIn@Home</string>
-	<string name="action_settings">Setting</string>
+	<string name="action_connection">Connection</string>
+	<string name="action_map">Map</string>
 	<string name="action_show_hide_map">Show/Hide Map</string>
+	<string name="action_quit">Quit</string>
 	<string name="map">Map</string>
 
 	<!-- setting -->
@@ -19,7 +21,20 @@
 	<string name="broadcast">Broadcast</string>
 	<string name="cancel">Cancel</string>
 	<string name="trial">Trial</string>
-
+	
+	<!-- map configuration -->
+	<string name="map_file_configuration_title">Map File</string>
+	<string name="load_map">Load Map</string>
+	<string name="reset_map">Reset Map</string>
+	<string name="map_coordinate_system">Map coordinate system</string>
+	<string name="map_coordinate_system_note">Note: The placement of the origin of the coordinate system of the map is calculated from the bottom left corner of the image. Right is positive X and left is positive Y (unless flipped).</string>
+	<string name="origin_x">X origin (m)</string>
+	<string name="origin_y">Y origin (m)</string>
+	<string name="flip_x_axis">Flip X Axis</string>
+	<string name="flip_y_axis">Flip Y Axis</string>
+	<string name="length_x">X Length (m)</string>
+	<string name="length_y">Y Length (m)</string>
+	
 	<!-- main layout -->
 	<string name="listen">Listen</string>
 	<string name="call_robot">Call Robot</string>

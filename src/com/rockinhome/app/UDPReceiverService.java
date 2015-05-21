@@ -13,18 +13,12 @@ import android.util.Log;
 public class UDPReceiverService extends Thread{
 	public static final String RECEIVED_PACKAGE = "received package",
 	  RESULT ="result",
-	  SUCCESS ="success",
-	  FAIL = "fail",
-	  STOPPED = "stopped";
+	  SUCCESS ="success";
+
 	boolean running = true;
-	
-	int timeout,
-	  trialMax;
-	
-	boolean repetition; // no repetition upon failure and timeout = 0
-	
+
 	Context context;
-	
+
 	UDPReceiverService(Context context){
 		this.context = context;
 	}
@@ -54,7 +48,6 @@ public class UDPReceiverService extends Thread{
 				socket.setBroadcast(true);
 				Log.d("UDP", "socket created with timeout:" + socket.getSoTimeout());
 			} catch (SocketException e1) {
-				// TODO Auto-generated catch block
 				Log.e("UDPReceiverService", "Fail creating a socket");
 				this.cancel(true);
 				e1.printStackTrace();
@@ -68,7 +61,7 @@ public class UDPReceiverService extends Thread{
 					DatagramPacket packet = new DatagramPacket(receiveMessage, receiveMessage.length);
 					socket.receive(packet);
 					Intent broadcastResultIntent = new Intent(UDPReceiverService.RECEIVED_PACKAGE);
-					broadcastResultIntent.putExtra(RESULT, SUCCESS);
+					broadcastResultIntent.putExtra(UDPReceiverService.RESULT, SUCCESS);
 					broadcastResultIntent.putExtra(UDPReceiverService.RECEIVED_PACKAGE, receiveMessage);
 					context.sendBroadcast(broadcastResultIntent);
 				} catch (SocketException e) {

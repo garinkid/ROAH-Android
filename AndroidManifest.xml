@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rockinhome.app"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="2.0" >
 
     <uses-sdk
         android:minSdkVersion="15"
@@ -10,9 +10,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE"/>
     
-    
-
     <supports-screens android:normalScreens="true"
 	  android:xlargeScreens="true"
 	  android:anyDensity="true"/>
@@ -36,8 +36,14 @@
             </intent-filter>            
         </activity>
         <activity
-            android:name="com.rockinhome.app.Setting" 
-            android:label="@string/action_settings"
+            android:name="com.rockinhome.app.ConfigureConnection" 
+            android:label="@string/action_connection"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="landscape" >
+        </activity>
+        <activity
+            android:name="com.rockinhome.app.ConfigureMap" 
+            android:label="@string/action_map"
             android:theme="@android:style/Theme.Dialog"
             android:screenOrientation="landscape" >
         </activity>
