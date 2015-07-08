@@ -1,52 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="400dp"
-	android:layout_height="match_parent"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
 	android:background="@android:color/white"
-	android:orientation="vertical" >
-	<ScrollView android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
-	<LinearLayout android:layout_width="fill_parent" 
+	android:orientation="horizontal" >
+	<ScrollView android:layout_width="0dip"
+		android:layout_height="fill_parent"
+		android:layout_weight="2">
+		<LinearLayout android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:orientation="vertical"	
-			android:paddingLeft="20dp"
-			android:paddingRight="20dp">
-			<!-- MAP FILE -->
-			<TextView style="@style/setting_title_text"
-				android:layout_width="fill_parent"
-				android:layout_height="wrap_content"
-				android:text="@string/map_file_configuration_title"/>
+			android:orientation="vertical"
+			android:paddingTop="20dp"
+			android:paddingRight="20dp"
+			android:paddingLeft="20dp">
 			<ImageView	android:contentDescription="@string/map"
 				android:id="@+id/map_preview"
 				android:layout_height="wrap_content" 
 				android:layout_width="fill_parent"
 				android:adjustViewBounds="true"
-				android:scaleType="centerInside"
-				android:src="@drawable/defaultmap"/>
+				android:scaleType="fitXY"/>
+			<TextView android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:orientation="horizontal"
+				android:padding="20dp"
+				android:background="@android:color/transparent"
+				android:textSize="18sp"
+				android:textColor="@android:color/black"
+				android:id="@+id/map_file_path_info" />
 			<TableRow android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
 				android:orientation="horizontal"
 				android:padding="20dp">
 				<Button style="@style/button"
 					android:layout_height="wrap_content"
-					android:layout_weight="0.5"
-					android:id="@+id/load_map"
-					android:text="@string/load_map"/>
-				<View style="@style/view_separator_vertical"/>
+					android:layout_weight="0.5" 
+					android:id="@+id/select_map_file"
+					android:text="@string/select_map_file"
+					android:layout_gravity="right"/>
+				<!-- Dummy button so the layout looks nice -->
 				<Button style="@style/button"
-			   		android:layout_height="wrap_content"
-			   		android:layout_weight="0.5"
-					android:id="@+id/reset_map"
-					android:text="@string/reset_map"/>
+					android:layout_height="wrap_content"
+					android:layout_weight="0.5"
+					android:visibility="invisible" />
 			</TableRow>
-
 			<!-- MAP COORDINATE SYSTEM -->
 			<TextView style="@style/setting_title_text"
 				android:id="@+id/send_setting_title_layout"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
 				android:text="@string/map_coordinate_system"/>
-			
+
 			<!-- MAP COORDINATE SYSTEM: ORIGIN -->
 			<TableRow android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
@@ -54,9 +57,9 @@
 				<TextView style="@style/setting_variable_text"  
 					android:text="@string/origin_x" />
 				<EditText style="@style/setting_variable_edit_text"  
-				    android:hint="@string/origin_x" 
+					android:hint="@string/origin_x" 
 					android:id="@+id/origin_x_input"
-					android:inputType="number"/>
+					android:inputType="numberDecimal"/>
 			</TableRow>
 			<TableRow android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
@@ -64,9 +67,9 @@
 				<TextView style="@style/setting_variable_text"  
 					android:text="@string/origin_y" />
 				<EditText style="@style/setting_variable_edit_text"  
-				    android:hint="@string/origin_y" 
+					android:hint="@string/origin_y" 
 					android:id="@+id/origin_y_input"
-					android:inputType="number"/>
+					android:inputType="numberDecimal"/>
 			</TableRow>
 			
 			<!-- MAP COORDINATE SYSTEM: LENGTH -->
@@ -74,21 +77,21 @@
 				android:layout_height="wrap_content"
 				android:orientation="horizontal">
 				<TextView style="@style/setting_variable_text"  
-					android:text="@string/length_x" />
+					android:text="@string/image_width" />
 				<EditText style="@style/setting_variable_edit_text"  
-				    android:hint="@string/length_x" 
-					android:id="@+id/length_x_input"
-					android:inputType="number"/>
+					android:hint="@string/image_width" 
+					android:id="@+id/image_width_input"
+					android:inputType="numberDecimal"/>
 			</TableRow>
 			<TableRow android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
 				android:orientation="horizontal">
 				<TextView style="@style/setting_variable_text"  
-					android:text="@string/length_y" />
+					android:text="@string/image_height" />
 				<EditText style="@style/setting_variable_edit_text"  
-				    android:hint="@string/length_y" 
-					android:id="@+id/length_y_input"
-					android:inputType="number"/>
+					android:hint="@string/image_height" 
+					android:id="@+id/image_height_input"
+					android:inputType="numberDecimal"/>
 			</TableRow>
 			<View style="@style/view_separator_horizontal"/>
 			<TableRow android:layout_width="fill_parent"
@@ -97,7 +100,7 @@
 				<TextView style="@style/setting_variable_text"  
 					android:text="@string/flip_x_axis" />
 				<Switch style="@style/setting_variable_switch" 
-				    android:id="@+id/flip_x_switch"/>
+					android:id="@+id/flip_x_switch"/>
 			</TableRow>
 			<View style="@style/view_separator_horizontal"/>
 			<TableRow android:layout_width="fill_parent"
@@ -113,23 +116,51 @@
 			    android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
 				android:text="@string/map_coordinate_system_note"/>
-
 			<TableRow android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
 				android:orientation="horizontal"
 				android:padding="20dp">
 				<Button style="@style/button"
-				    android:layout_height="wrap_content"
+					android:layout_height="wrap_content"
 					android:layout_weight="0.5" 
-					android:id="@+id/ok_input"
-					android:text="@string/ok"/>
-				<View style="@style/view_separator_vertical"/>
-				<Button style="@style/button" 
-				    android:layout_height="wrap_content"
-					android:id="@+id/cancel_input"
-					android:text="@string/cancel"
-					android:layout_weight="0.5"/>
-			</TableRow>
-		</LinearLayout>
-	</ScrollView>
+					android:id="@+id/save_map_config"
+					android:text="@string/save"/>
+				<!-- Dummy button so the layout looks nice -->
+				<Button style="@style/button"
+					android:layout_height="wrap_content"
+					android:layout_weight="0.5"
+					android:visibility="invisible" />
+			</TableRow>	
+			</LinearLayout>
+		</ScrollView>
+		
+		<RelativeLayout android:layout_width="0dip"
+			android:layout_height="fill_parent"
+			android:orientation="vertical"
+			android:layout_weight="1"
+			android:paddingLeft="10dp"
+			android:paddingRight="10dp"
+			android:paddingBottom="20dp">
+			<LinearLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			android:layout_above="@+id/ok_input"
+			android:layout_alignParentTop="true"
+			android:paddingBottom="20dp">
+				<TextView style="@style/setting_title_text"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:text="@string/map_list_title"/>
+				<ListView
+				    android:id="@+id/map_list"
+				    android:layout_width="fill_parent"
+				    android:layout_height="wrap_content"/>
+			</LinearLayout>
+			<Button style="@style/button"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:id="@+id/ok_input"
+				android:text="@string/ok"
+				android:layout_alignParentBottom="true"/>
+		</RelativeLayout>
 </LinearLayout>

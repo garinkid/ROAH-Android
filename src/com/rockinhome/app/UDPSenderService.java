@@ -20,25 +20,25 @@ import android.util.Log;
 public class UDPSenderService extends Thread{
 	public static final String TAG="UDPSend",
 	  MESSAGE = "message";
-	
+
 	public static final int CONTINUOUS_INTERVAL = 1000; //milisecond 
-	
+
 	public boolean running;
-	
+
 	int interval, 
 	  repetition,
 	  port;
-	
+
 	String host;
-	
+
 	byte[] message;
-	
+
 	Context context;
-	
+
 	UDPSenderService(Context context){
 		this.context = context;
 	}
-	
+
 	public void run(String host, int port, int interval, int repetition, byte[] message) {
 		Log.d("UDP", "is called");
 		this.host = host;
@@ -48,19 +48,18 @@ public class UDPSenderService extends Thread{
 		this.message = message;
 		if(repetition==0){
 			this.interval = CONTINUOUS_INTERVAL;
-		};
+		}
 		Log.d(TAG, "Host: " + this.host + ", port: " + this.port);
 		running = true;
 		Log.d("TAG", "calling UDP");
 		new UDPSenderAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-	
+
 	public void interrupt(){
 		this.running = false;
 	}
-	
-	public class UDPSenderAsyncTask extends AsyncTask<Void, Integer, Boolean>{
 
+	public class UDPSenderAsyncTask extends AsyncTask<Void, Integer, Boolean>{
 		@Override
 		protected Boolean doInBackground(Void... Void) {
 			// create message
@@ -72,7 +71,6 @@ public class UDPSenderService extends Thread{
 				//socket.setReuseAddress(true);
 				socket.setBroadcast(true);
 				Log.d("UDP", "socket created");
-				
 			} catch (SocketException e1) {
 				Log.e("UDPReceiverService", "Fail creating a socket");
 				this.cancel(true);
@@ -113,7 +111,5 @@ public class UDPSenderService extends Thread{
 			socket.close();
 			return null;
 		}
-		
 	}
-	
 }

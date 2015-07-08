@@ -1,26 +1,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.rockinhome.MainActivity" >
-
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_connection"/>
-	<item 
-	    android:id="@+id/action_setting_map"
-	    android:orderInCategory="100"
-	    android:showAsAction="never"
-	    android:title="@string/action_map"/>
-
-    <item
-        android:id="@+id/action_show_hide_map"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_show_hide_map"/>
+	xmlns:tools="http://schemas.android.com/tools"
+	tools:context="com.example.rockinhome.MainActivity" >
 	<item
-        android:id="@+id/action_quit"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_quit"/>
+		android:id="@+id/action_settings"
+		android:orderInCategory="100"
+		android:showAsAction="never"
+		android:title="@string/action_connection"/>
+	<item 
+		android:id="@+id/action_setting_map"
+		android:orderInCategory="100"
+		android:showAsAction="never"
+		android:title="@string/action_map"/>
+	<item
+		android:id="@+id/action_show_hide_map"
+		android:orderInCategory="100"
+		android:showAsAction="never"
+		android:title="@string/action_show_hide_map"/>
+	<item
+		android:id="@+id/action_quit"
+		android:orderInCategory="100"
+		android:showAsAction="never"
+		android:title="@string/action_quit"/>
 </menu>

@@ -9,7 +9,6 @@ package com.rockinhome.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -26,27 +25,26 @@ public class ConfigureConnection extends Activity{
 
 	Button okInput, 
 	  cancelInput;
-	
+
 	Intent intent;
-	
+
 	UDPConfig uDPConfig;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.configure_connection);
-		
+
 		//collect context for toast message		
 		uDPConfig = new UDPConfig();
-		
 		uDPConfig.getExtras(getIntent().getExtras());
-		
+
 		//set View 
 		receivePortInput = (EditText)findViewById(R.id.receive_port_input);
 		sendPortInput = (EditText)findViewById(R.id.send_port_input);
 		intervalInput = (EditText)findViewById(R.id.send_interval_input);
 		hostIPInput = (EditText)findViewById(R.id.host_ip_input);
-		
+
 		//set values
 		receivePortInput.setText(Integer.toString(uDPConfig.receivePort));
 		sendPortInput.setText(Integer.toString(uDPConfig.sendPort));
@@ -54,7 +52,7 @@ public class ConfigureConnection extends Activity{
 		if(!uDPConfig.hostIP.contentEquals("")){
 			hostIPInput.setText(uDPConfig.hostIP);
 		}
-		
+
 		//set Buttons
 		okInput = (Button)findViewById(R.id.ok_input);
 		cancelInput = (Button)findViewById(R.id.cancel_input);
@@ -62,14 +60,14 @@ public class ConfigureConnection extends Activity{
 		cancelInput.setOnClickListener(onClick);
 		
 	}
-	
-	int editTextViewInput(EditText editText){
+
+	private int editTextViewInput(EditText editText){
 		// return -1 for empty string, return the actual value when it is correct.
 		String input = editText.getText().toString();
 		if(input.contentEquals("")){return -1;};
 		return Integer.parseInt(input);
 	} 
-	
+
 	private OnClickListener onClick = new OnClickListener(){
 		@Override
 		public void onClick(View view) {
@@ -93,5 +91,4 @@ public class ConfigureConnection extends Activity{
 			}	
 		}
 	};
-
 }

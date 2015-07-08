@@ -1,3 +1,9 @@
+/* 
+ * This file is part of the RoCKIn@Home Android App.
+ * Author: Rhama Dwiputra
+ * 
+ */
+
 package com.rockinhome.app;
 
 import java.io.IOException;
@@ -27,16 +33,16 @@ public class UDPReceiverService extends Thread{
 		Log.d("UDP", "is called");
 		int port = receive_port;
 		running = true;
-		new UDPReceiverAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, port);	
-    }
+		new UDPReceiverAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, port);
+	}
 
-    public void interrupt(){
+	public void interrupt(){
 		Intent broadcastActivityIntent = new Intent(MainActivity.ACTIVITY_LOG);
 		broadcastActivityIntent.putExtra(MainActivity.ACTIVITY_LOG, "Listening stopped");
 		context.sendBroadcast(broadcastActivityIntent);
 		running = false;
-    }
-	
+	}
+
 	public class UDPReceiverAsyncTask extends AsyncTask<Integer, Integer, Boolean>{
 		@Override
 		protected Boolean doInBackground(Integer... port) {
