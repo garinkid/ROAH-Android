@@ -35,7 +35,7 @@ import android.widget.ImageView;
  */
 
 public class Map {
-	public final static String TAG = "Map",
+	public final String TAG = "Map",
 	  MAP_NAME = "map name",
 	  MAP_FILE_PATH = "map",
 	  MAP_IMAGE_WIDTH = "map image width",
@@ -175,6 +175,8 @@ public class Map {
 				mapView.setImageBitmap(bitmap);
 				loadOriginToImageView(mapView);
 			}else{
+				mapView.destroyDrawingCache();
+				mapView.setImageDrawable(null);
 				mapLoaded = false;
 			}
 		}
@@ -331,8 +333,8 @@ public class Map {
 
 	private Bitmap rescaledBitmap(String filePath){
 		Bitmap bitmap = BitmapFactory.decodeFile(filePath);
-		double maxWidth = 1440.0;
-		double maxHeight = 2560.0;
+		double maxWidth = 1280.0;
+		double maxHeight = 720.0;
 		double heightDiff = bitmap.getHeight() - maxHeight;
 		double widthDiff = bitmap.getWidth() - maxWidth;
 		if(widthDiff > heightDiff && widthDiff > 0){

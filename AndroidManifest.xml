@@ -46,11 +46,5 @@
 			android:label="@string/action_map"
 			android:screenOrientation="landscape" >
 		</activity>
-		<activity
-			android:name="com.rockinhome.app.MapList" 
-			android:label="@string/action_map"
-			android:theme="@android:style/Theme.Dialog"
-			android:screenOrientation="landscape" >
-		</activity>
 	</application>
 </manifest>

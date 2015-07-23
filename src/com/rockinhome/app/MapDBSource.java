@@ -1,3 +1,9 @@
+/* 
+ * This file is part of the RoCKIn@Home Android App.
+ * Author: Rhama Dwiputra
+ * 
+ */
+
 package com.rockinhome.app;
 
 import java.util.ArrayList;

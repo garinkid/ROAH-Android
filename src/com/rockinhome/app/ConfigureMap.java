@@ -38,26 +38,12 @@ import android.widget.Toast;
 
 public class ConfigureMap extends Activity{
 
-	public final static String TAG="ConfigureMap";
-	public final static int LOAD_MAP = 1;
+	public final String TAG="ConfigureMap";
+	public final int LOAD_MAP = 1;
 
 	Map map;
 
-	EditText originX, originY,
-	  imageWidth, imageHeight;
-
-	ImageView mapPreview;
-
-	Button okInput, loadMap, 
-	  saveMapConfig;
-
-	Switch flipX, flipY;
-
-	TextView mapFilePathInfo;
-
 	MapDBSource mapDBSource;
-
-	ListView mapListView;
 
 	ArrayAdapter<String> mapAdapter;
 
@@ -69,26 +55,18 @@ public class ConfigureMap extends Activity{
 		map = new Map();
 		map.getExtras(getIntent().getExtras());
 		//get views
-		originX = (EditText)findViewById(R.id.origin_x_input);
-		originY = (EditText)findViewById(R.id.origin_y_input);
-		imageWidth = (EditText)findViewById(R.id.image_width_input);
-		imageHeight = (EditText)findViewById(R.id.image_height_input);
-		flipX = (Switch)findViewById(R.id.flip_x_switch);
-		flipY = (Switch)findViewById(R.id.flip_y_switch);
-		mapFilePathInfo = (TextView)findViewById(R.id.map_file_path_info);
 		//set views value
 		setViewsValues();
 		startChangedStateListener();
 		
 		//set Buttons
-		okInput = (Button)findViewById(R.id.ok_input);
+		Button okInput = (Button)findViewById(R.id.ok_input);
 		okInput.setOnClickListener(onClick);
-		saveMapConfig = (Button)findViewById(R.id.save_map_config);
+		Button saveMapConfig = (Button)findViewById(R.id.save_map_config);
 		saveMapConfig.setOnClickListener(onClick);
-		loadMap = (Button)findViewById(R.id.select_map_file);
+		Button loadMap = (Button)findViewById(R.id.select_map_file);
 		loadMap.setOnClickListener(onClick);
 		
-		mapPreview = (ImageView)findViewById(R.id.map_preview);
 		loadMap();
 		
 		//set map database
@@ -108,7 +86,7 @@ public class ConfigureMap extends Activity{
 			mapList = mapDBSource.getAllMapNames();
 		}
 
-		mapListView = (ListView)findViewById(R.id.map_list);
+		ListView mapListView = (ListView)findViewById(R.id.map_list);
 		mapAdapter = new ArrayAdapter<String>(this,
 		  android.R.layout.simple_list_item_1, mapList);
 		mapListView.setAdapter(mapAdapter);
@@ -120,6 +98,14 @@ public class ConfigureMap extends Activity{
 		 * Used for instant update on the map
 		 * Need to be stopped when loading a previously configured maps.
 		 */
+		
+		EditText originX = (EditText)findViewById(R.id.origin_x_input);
+		EditText originY = (EditText)findViewById(R.id.origin_y_input);
+		EditText imageWidth = (EditText)findViewById(R.id.image_width_input);
+		EditText imageHeight = (EditText)findViewById(R.id.image_height_input);
+		Switch flipX = (Switch)findViewById(R.id.flip_x_switch);
+		Switch flipY = (Switch)findViewById(R.id.flip_y_switch);
+		
 		originX.addTextChangedListener(tW);
 		originY.addTextChangedListener(tW);
 		imageWidth.addTextChangedListener(tW);
@@ -132,6 +118,14 @@ public class ConfigureMap extends Activity{
 		/* Stop change listener for all input
 		 * Used when loading a previously configured maps.
 		 */
+
+		EditText originX = (EditText)findViewById(R.id.origin_x_input);
+		EditText originY = (EditText)findViewById(R.id.origin_y_input);
+		EditText imageWidth = (EditText)findViewById(R.id.image_width_input);
+		EditText imageHeight = (EditText)findViewById(R.id.image_height_input);
+		Switch flipX = (Switch)findViewById(R.id.flip_x_switch);
+		Switch flipY = (Switch)findViewById(R.id.flip_y_switch);
+		
 		originX.removeTextChangedListener(tW);
 		originY.removeTextChangedListener(tW);
 		imageWidth.removeTextChangedListener(tW);
@@ -142,7 +136,16 @@ public class ConfigureMap extends Activity{
 	
 	private void setViewsValues(){
 		// Set all inputs based on the current variable value of the map
+		TextView mapFilePathInfo = (TextView)findViewById(R.id.map_file_path_info);		
 		mapFilePathInfo.setText("File path: " + map.filePath);
+		
+		EditText originX = (EditText)findViewById(R.id.origin_x_input);
+		EditText originY = (EditText)findViewById(R.id.origin_y_input);
+		EditText imageWidth = (EditText)findViewById(R.id.image_width_input);
+		EditText imageHeight = (EditText)findViewById(R.id.image_height_input);
+		Switch flipX = (Switch)findViewById(R.id.flip_x_switch);
+		Switch flipY = (Switch)findViewById(R.id.flip_y_switch);
+				
 		originX.setText(Double.toString(map.xOrigin));
 		originY.setText(Double.toString(map.yOrigin));
 		imageWidth.setText(Double.toString(map.imageWidth));
@@ -153,6 +156,13 @@ public class ConfigureMap extends Activity{
 
 	private void getViewsValues(){
 		// Set the map's variable values based on the input
+		EditText originX = (EditText)findViewById(R.id.origin_x_input);
+		EditText originY = (EditText)findViewById(R.id.origin_y_input);
+		EditText imageWidth = (EditText)findViewById(R.id.image_width_input);
+		EditText imageHeight = (EditText)findViewById(R.id.image_height_input);
+		Switch flipX = (Switch)findViewById(R.id.flip_x_switch);
+		Switch flipY = (Switch)findViewById(R.id.flip_y_switch);
+				
 		map.xOrigin = Double.parseDouble(originX.getText().toString());
 		map.yOrigin = Double.parseDouble(originY.getText().toString());
 		map.imageWidth = Double.parseDouble(imageWidth.getText().toString());
@@ -198,6 +208,7 @@ public class ConfigureMap extends Activity{
 	private OnItemClickListener mapListListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			ListView mapListView = (ListView)findViewById(R.id.map_list);
 			final String selectedMap = mapListView.getItemAtPosition(position).toString();
 			new AlertDialog.Builder(ConfigureMap.this)
 			  .setMessage("Load/delete '" + selectedMap + "' map?")
@@ -324,6 +335,7 @@ public class ConfigureMap extends Activity{
 			if (options.outWidth != -1 && options.outHeight != -1) {
 				// it is an image file
 				map.filePath = filePath;
+				TextView mapFilePathInfo = (TextView)findViewById(R.id.map_file_path_info);				
 				mapFilePathInfo.setText("File path: " + map.filePath);
 				loadMap();
 			}
@@ -350,6 +362,7 @@ public class ConfigureMap extends Activity{
 	}
 	
 	private void loadMap(){
+		ImageView mapPreview = (ImageView)findViewById(R.id.map_preview);
 		if(!map.loadMapToImageView(mapPreview)){
 			Toast.makeText(getApplicationContext(), 
 			  "File '" + map.filePath + "' doesn't exist", Toast.LENGTH_SHORT).show();

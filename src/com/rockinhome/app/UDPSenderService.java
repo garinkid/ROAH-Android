@@ -11,45 +11,29 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.Log;
 
 public class UDPSenderService extends Thread{
-	public static final String TAG="UDPSend",
-	  MESSAGE = "message";
+	public final String TAG="UDPSend";
 
-	public static final int CONTINUOUS_INTERVAL = 1000; //milisecond 
+	public final int CONTINUOUS_INTERVAL = 1000; //milisecond 
 
 	public boolean running;
 
-	int interval, 
-	  repetition,
-	  port;
-
-	String host;
+	UDPConfig uDPConfig;
 
 	byte[] message;
 
-	Context context;
-
-	UDPSenderService(Context context){
-		this.context = context;
-	}
-
-	public void run(String host, int port, int interval, int repetition, byte[] message) {
+	public void run(UDPConfig uDPConfig, byte[] message) {
 		Log.d("UDP", "is called");
-		this.host = host;
-		this.port = port;
-		this.repetition = repetition;
-		this.interval = interval;
+		this.uDPConfig = uDPConfig;
 		this.message = message;
-		if(repetition==0){
-			this.interval = CONTINUOUS_INTERVAL;
+		if(uDPConfig.repetition==0){
+			this.uDPConfig.interval = CONTINUOUS_INTERVAL;
 		}
-		Log.d(TAG, "Host: " + this.host + ", port: " + this.port);
+		Log.d(TAG, "Host: " + uDPConfig.hostIP + ", port: " + uDPConfig.sendPort);
 		running = true;
 		Log.d("TAG", "calling UDP");
 		new UDPSenderAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -77,12 +61,13 @@ public class UDPSenderService extends Thread{
 				e1.printStackTrace();
 			}
 			
-			if(repetition == 0){
+			if(uDPConfig.repetition == 0){
 				while(running){
 					try {
-						DatagramPacket datagramPacket = new DatagramPacket(message, message.length, InetAddress.getByName(host), port);
+						DatagramPacket datagramPacket = new DatagramPacket(message, 
+						  message.length, InetAddress.getByName(uDPConfig.hostIP), uDPConfig.sendPort);
 						socket.send(datagramPacket);
-						SystemClock.sleep(interval);
+						SystemClock.sleep(uDPConfig.interval);
 					} catch (SocketException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
@@ -90,11 +75,12 @@ public class UDPSenderService extends Thread{
 					}	
 				}
 			}else{
-				for(int i = 0; i<repetition; i++){
+				for(int i = 0; i<uDPConfig.repetition; i++){
 					try {
-						DatagramPacket datagramPacket = new DatagramPacket(message, message.length, InetAddress.getByName(host), port);
+						DatagramPacket datagramPacket = new DatagramPacket(message,
+						  message.length, InetAddress.getByName(uDPConfig.hostIP), uDPConfig.sendPort);
 						socket.send(datagramPacket);
-						SystemClock.sleep(interval);
+						SystemClock.sleep(uDPConfig.interval);
 					} catch (SocketException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
@@ -102,11 +88,6 @@ public class UDPSenderService extends Thread{
 					}
 				}
 			}
-			Intent broadcastActivityIntent = new Intent(MainActivity.ACTIVITY_LOG);
-			broadcastActivityIntent.putExtra(MainActivity.ACTIVITY_LOG, "Message sent to "
-			  + host + ":" + port + " (" + repetition + " repetition, " + 
-			  interval + " ms interval)");
-			context.sendBroadcast(broadcastActivityIntent);
 			socket.disconnect();
 			socket.close();
 			return null;

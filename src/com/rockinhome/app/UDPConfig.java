@@ -11,7 +11,7 @@ import android.os.Bundle;
 
 public class UDPConfig {
 
-	public final static String
+	public final String
 	  HOST_IP="host ip",
 	  RECEIVE_PORT="receive port",
 	  SEND_PORT="send port",
@@ -46,7 +46,7 @@ public class UDPConfig {
 		//previous default hostIP = "10.255.255.255";
 		this.hostIP = "255.255.255.255"; // yes it is a hack, yes we know it and yes we haven't fix it yet.
 		this.sendPort = 6666;
-		this.repetition = 1; // not being used TODO  eliminate
+		this.repetition = 0; // not being used TODO  eliminate
 		this.interval = 1000;
 		this.receivePort = 6666;
 	}

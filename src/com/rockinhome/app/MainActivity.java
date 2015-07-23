@@ -6,15 +6,11 @@
 
 package com.rockinhome.app;
 
-import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 
-import eu.rockin.roah_rsbb_msgs.RoahRsbbBeaconProtos.RoahRsbbBeacon;
-import eu.rockin.roah_rsbb_msgs.RobotBeaconProtos.RobotBeacon;
 import eu.rockin.roah_rsbb_msgs.TabletBeaconProtos.TabletBeacon;
 import eu.rockin.roah_rsbb_msgs.TimeProtos.Time;
 import android.app.Activity;
@@ -30,7 +26,6 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,36 +38,20 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-	public final static String TAG = "Main activity",
+	public final String TAG = "Main activity",
 	  ACTIVITY_LOG="activity log";
 
-	public final static int BUTTON_CALL = 1,
+	public final int BUTTON_CALL = 1,
 	  MAP_CALL = 2,
-	  RESUME = 3;
+	  RESUME = 3,
+	  CONNECTION_CONFIGURATION_REQUEST = 4,
+	  MAP_CONFIGURATION_REQUEST = 5;
 
 	double tabletBeaconX, tabletBeaconY;
-
-	byte[] message;
-
-	boolean listening;
-
-	static final int CONNECTION_CONFIGURATION_REQUEST = 1,
-	  MAP_CONFIGURATION_REQUEST = 2;
-
-	TextView activityLog;
-
-	Button callRobot, quit;
-
-	ImageView mapView, mapBlinkerView;
-	
-	FrameLayout mapLayout;
-
-	Context context;
 
 	Map map;
 
@@ -80,22 +59,18 @@ public class MainActivity extends Activity {
 
 	Time lastCallTime, lastPoseTime;
 
-	IntentFilter intentFilterPackage, intentFilterLog;
-
 	UDPReceiverService uDPReceiverService;
 	
 	UDPSenderService uDPSenderServiceContinuous;
-
-	SharedPreferences preferences;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		context = getBaseContext();
 
 		//collect previously set values
-		preferences =  PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences preferences =  PreferenceManager
+		  .getDefaultSharedPreferences(this);
 
 		map = new Map();
 		map.getFromPreference(preferences);
@@ -105,30 +80,21 @@ public class MainActivity extends Activity {
 		uDPConfig.reset();
 
 		//set buttons
-		callRobot = (Button)findViewById(R.id.call_robot_button);
-		quit = (Button)findViewById(R.id.quit_button);
+		Button callRobot = (Button)findViewById(R.id.call_robot_button);
+		Button quit = (Button)findViewById(R.id.quit_button);
 		callRobot.setOnClickListener(onClick);
 		quit.setOnClickListener(onClick);
 
 		//set map view
-		mapView = (ImageView)findViewById(R.id.map);
-		mapLayout = (FrameLayout)findViewById(R.id.map_layout);
+		ImageView mapView = (ImageView)findViewById(R.id.map);
+		FrameLayout mapLayout = (FrameLayout)findViewById(R.id.map_layout);
 		mapView.setOnTouchListener(onTouch);
-		mapBlinkerView = (ImageView)findViewById(R.id.map_blinker);
 
 		//hide map by default
 		mapLayout.setVisibility(View.INVISIBLE);
 
-		//activity log
-		activityLog = (TextView)findViewById(R.id.log);
-		activityLog.setVisibility(View.GONE);
-
-		intentFilterPackage = new IntentFilter(UDPReceiverService.RECEIVED_PACKAGE);
-		intentFilterLog = new IntentFilter(ACTIVITY_LOG);
-		listening=false;
-
 		uDPReceiverService = new UDPReceiverService(getBaseContext());
-		uDPSenderServiceContinuous = new UDPSenderService(getBaseContext());
+		uDPSenderServiceContinuous = new UDPSenderService();
 
 		//set last time to zero the app is activated
 		lastCallTime = Time.newBuilder().setSec(0).setNsec(0).build();
@@ -154,20 +120,16 @@ public class MainActivity extends Activity {
 		Intent intent;
 		switch(id){
 		case R.id.action_settings:
-			intent = new Intent(context, ConfigureConnection.class);
+			intent = new Intent(getBaseContext(), ConfigureConnection.class);
 			intent = uDPConfig.putExtras(intent);
 			startActivityForResult(intent, CONNECTION_CONFIGURATION_REQUEST);
 			return true;
 		case R.id.action_show_hide_map:
-			loadMap();
-			if(mapLayout.isShown()){
-				mapLayout.setVisibility(View.INVISIBLE);
-			}else{
-				mapLayout.setVisibility(View.VISIBLE);
-			}
+			FrameLayout mapLayout = (FrameLayout)findViewById(R.id.map_layout);
+			showMap(!mapLayout.isShown());
 			return true;
 		case R.id.action_setting_map:
-			intent = new Intent(context, ConfigureMap.class);
+			intent = new Intent(getBaseContext(), ConfigureMap.class);
 			intent = map.putExtras(intent);
 			startActivityForResult(intent, MAP_CONFIGURATION_REQUEST);
 			return true;
@@ -179,8 +141,8 @@ public class MainActivity extends Activity {
 
 	protected void onResume(){
 		super.onResume();
+		IntentFilter intentFilterPackage = new IntentFilter(UDPReceiverService.RECEIVED_PACKAGE);
 		registerReceiver(packageReceiver, intentFilterPackage);
-		registerReceiver(logReceiver, intentFilterLog);
 
 		//stop currently running thread
 		uDPReceiverService.interrupt();
@@ -188,14 +150,13 @@ public class MainActivity extends Activity {
 
 		//start new thread to listen with the new port
 		uDPReceiverService.run(uDPConfig.receivePort);
-		message =  createTabletBeaconMessage(RESUME);
-		uDPSenderServiceContinuous.run(uDPConfig.hostIP, uDPConfig.sendPort, uDPConfig.interval, 0, message);
+		byte[] message =  createTabletBeaconMessage(RESUME);
+		uDPSenderServiceContinuous.run(uDPConfig, message);
 	}
 
 	@Override
 	protected void onPause() {
 		unregisterReceiver(packageReceiver);
-		unregisterReceiver(logReceiver);
 		uDPReceiverService.interrupt();
 		uDPSenderServiceContinuous.interrupt();
 		super.onPause();
@@ -204,6 +165,8 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStop(){
 		super.onStop();
+		SharedPreferences preferences =  PreferenceManager
+		  .getDefaultSharedPreferences(this);
 		map.saveToPreference(preferences);
 	}
 
@@ -213,9 +176,12 @@ public class MainActivity extends Activity {
 			switch(view.getId()){
 			case R.id.call_robot_button:
 				setTabletBeaconCoordinate(0, 0);
+				ImageView mapBlinkerView = (ImageView)findViewById(R.id.map_blinker);
+				mapBlinkerView.destroyDrawingCache();
+				mapBlinkerView.setImageDrawable(null);
 				byte[] message = createTabletBeaconMessage(BUTTON_CALL);
 				uDPSenderServiceContinuous.interrupt();
-				uDPSenderServiceContinuous.run(uDPConfig.hostIP, uDPConfig.sendPort, uDPConfig.interval, 0, message);
+				uDPSenderServiceContinuous.run(uDPConfig, message);
 				break;	
 			case R.id.quit_button:
 				finish();
@@ -243,7 +209,16 @@ public class MainActivity extends Activity {
 		tabletBeaconX = x;
 		tabletBeaconY = y;
 	}
-
+	
+	protected void showMap(boolean showMap){
+		FrameLayout mapLayout = (FrameLayout)findViewById(R.id.map_layout);
+		if(showMap){
+			mapLayout.setVisibility(View.VISIBLE);
+		}else{
+			mapLayout.setVisibility(View.INVISIBLE);
+		}
+	}
+	
 	protected byte[] createTabletBeaconMessage(int method) {
 		//set last call
 		long unixTime = System.currentTimeMillis();
@@ -263,8 +238,8 @@ public class MainActivity extends Activity {
 		  .setX(tabletBeaconX)
 		  .setY(tabletBeaconY).build();
 
-		Log.d(TAG, "TabletBeacon: x=" +  tabletBeaconX + ",y=" + tabletBeaconY + ",lastCall=" + lastCallTime.getSec() +
-		  ",lastPose" + lastPoseTime.getSec());
+		Log.d(TAG, "TabletBeacon: x=" +  tabletBeaconX + ",y=" + tabletBeaconY + 
+		  ",lastCall=" + lastCallTime.getSec() + ",lastPose" + lastPoseTime.getSec());
 
 		/* Serialize the message
 		* 12 extra bytes for: 
@@ -288,12 +263,7 @@ public class MainActivity extends Activity {
 	}
 
 	protected void informUser(String message) {
-		Toast.makeText(context, message, Toast.LENGTH_LONG).show();
-	}
-
-	private void writeToLog(String str){
-		activityLog.setText(str + " at " + 
-		  DateFormat.format("dd.MM.yyyy kk:mm:ss ", System.currentTimeMillis()));
+		Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
 	}
 
 	OnTouchListener onTouch = new OnTouchListener(){
@@ -301,11 +271,13 @@ public class MainActivity extends Activity {
 		public boolean onTouch(View v, MotionEvent event) {
 			switch(v.getId()){
 			case R.id.map:
+				ImageView mapView = (ImageView)findViewById(R.id.map);
 				if(map.loadMapToImageView(mapView)){
 					float touchX =  event.getX();
 					float touchY = event.getY();
 					//update image
 					loadMap();
+					ImageView mapBlinkerView = (ImageView)findViewById(R.id.map_blinker);
 					mapBlinkerView.setImageDrawable(null);
 					mapBlinkerView.buildDrawingCache();
 					Bitmap mapBitmap = mapBlinkerView.getDrawingCache();
@@ -315,7 +287,7 @@ public class MainActivity extends Activity {
 					paint.setAntiAlias(true);
 					canvas.drawCircle(touchX, touchY, (float)30 , paint);
 					mapBlinkerView.setImageDrawable(new BitmapDrawable(getResources(), mapBitmap));
-					Animation animation = AnimationUtils.loadAnimation(context, R.anim.blink);
+					Animation animation = AnimationUtils.loadAnimation(getBaseContext(), R.anim.blink);
 					mapBlinkerView.startAnimation(animation);
 					//send message
 					double xCoordinate = map.calculateX(mapView.getWidth(), touchX);
@@ -323,7 +295,7 @@ public class MainActivity extends Activity {
 					setTabletBeaconCoordinate(xCoordinate, yCoordinate);
 					byte[] message = createTabletBeaconMessage(MAP_CALL);
 					uDPSenderServiceContinuous.interrupt();
-					uDPSenderServiceContinuous.run(uDPConfig.hostIP, uDPConfig.sendPort, uDPConfig.interval, 0, message);
+					uDPSenderServiceContinuous.run(uDPConfig, message);
 				}else{
 					Toast.makeText(getApplicationContext(), 
 					  "File '" + map.filePath + "' doesn't exist", Toast.LENGTH_SHORT).show();
@@ -340,80 +312,18 @@ public class MainActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String result = intent.getStringExtra(UDPReceiverService.RESULT);
 			if(result.contentEquals(UDPReceiverService.SUCCESS)){
-				byte[] receivedByte = intent.getByteArrayExtra(UDPReceiverService.RECEIVED_PACKAGE);
-				DatagramPacket datagramPacket = new DatagramPacket(receivedByte, receivedByte.length);
-				try {
-					translatePacket(datagramPacket);
-				} catch (InvalidProtocolBufferException e) {
-					e.printStackTrace();
-				}
-			}else{
-				listening = false;
+				FrameLayout mapLayout = (FrameLayout)findViewById(R.id.map_layout);
+				showMap(intent.getBooleanExtra(UDPReceiverService.RECEIVED_PACKAGE, mapLayout.isShown()));				
 			}
 		}
 	};
 
-	//receiver for log activity
-	BroadcastReceiver logReceiver = new BroadcastReceiver () {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String message = intent.getStringExtra(MainActivity.ACTIVITY_LOG);
-			writeToLog(message);
-		}
-	};
-
-	protected void translatePacket(DatagramPacket packetData) throws InvalidProtocolBufferException{
-		byte[] header = new byte[12];
-		String messageType;
-		System.arraycopy(packetData.getData(), 0, header, 0, 12);
-		ByteBuffer headerBuff = ByteBuffer.wrap(header);
-		headerBuff.rewind();
-
-		int frameHeaderVersion = headerBuff.getInt(); //not being used
-		int size = headerBuff.getInt() - 4; 
-		int cmpId = headerBuff.getShort();
-		int msgId = headerBuff.getShort();
-
-		//4 bytes are used for cmp_id, msg_id
-		//8 bytes are used for udp header;
-		if(size == 0){
-			//Log.d("UDP", "message size 0");
-			return;
-		}
-
-		//Log.d(TAG, "Size:" + size + ", cmp_id:" + cmpId + ", msg_id: " + msgId);
-		if(size < 0){return;} // TODO usually happens when simultaneously sending and receiving 
-		byte[] protobuf = new byte[size];
-		System.arraycopy(packetData.getData(), 12, protobuf, 0, size);
-		//message is RobotBeacon from eu.rockin.roah_rsbb_msgs
-		if(msgId == 30){
-			messageType = "RobotBeacon"; 
-			RobotBeacon robotBeacon = RobotBeacon.parseFrom(protobuf);
-			Log.d("UDP", "robot name: " + robotBeacon.getRobotName().toString() + 
-				", team name: " + robotBeacon.getTeamName().toString() +
-				", time: " + robotBeacon.getTime().toString());
-		}else if(msgId == 10){
-			//message is RoahRsbbBeacon from eu.rockin.roah_rsbb_msgs
-			messageType = "RoahRsbbBeacon"; 
-			RoahRsbbBeacon roahRsbbBeacon = RoahRsbbBeacon.parseFrom(protobuf);
-			boolean showMap = roahRsbbBeacon.getTabletDisplayMap();
-			if(showMap){
-				mapView.setVisibility(View.VISIBLE);
-			}else{
-				mapView.setVisibility(View.INVISIBLE);
-			}
-		}else{
-			//unknown message
-			messageType = "Unknown message"; 
-			//Log.d("UDP", "unknown message id: " + msgId);
-		}
-		writeToLog("received " + messageType);
-	}
-	
 	private void loadMap(){
+		ImageView mapView = (ImageView)findViewById(R.id.map);
 		if(!map.loadMapToImageView(mapView)){
 			Toast.makeText(getApplicationContext(), 
 			  "File '" + map.filePath + "' doesn't exist", Toast.LENGTH_SHORT).show();
 		};
 	}
+	
 }

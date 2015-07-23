@@ -16,19 +16,7 @@ import android.widget.EditText;
 
 public class ConfigureConnection extends Activity{
 
-	public final static String TAG = "ConfigureConnection.class";
-
-	EditText receivePortInput, 
-	  sendPortInput,
-	  hostIPInput,
-	  intervalInput;
-
-	Button okInput, 
-	  cancelInput;
-
-	Intent intent;
-
-	UDPConfig uDPConfig;
+	public final String TAG = "ConfigureConnection.class";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +24,13 @@ public class ConfigureConnection extends Activity{
 		setContentView(R.layout.configure_connection);
 
 		//collect context for toast message		
-		uDPConfig = new UDPConfig();
+		UDPConfig uDPConfig = new UDPConfig();
 		uDPConfig.getExtras(getIntent().getExtras());
 
-		//set View 
-		receivePortInput = (EditText)findViewById(R.id.receive_port_input);
-		sendPortInput = (EditText)findViewById(R.id.send_port_input);
-		intervalInput = (EditText)findViewById(R.id.send_interval_input);
-		hostIPInput = (EditText)findViewById(R.id.host_ip_input);
+		EditText receivePortInput = (EditText)findViewById(R.id.receive_port_input);
+		EditText sendPortInput = (EditText)findViewById(R.id.send_port_input);
+		EditText intervalInput = (EditText)findViewById(R.id.send_interval_input);
+		EditText hostIPInput = (EditText)findViewById(R.id.host_ip_input);
 
 		//set values
 		receivePortInput.setText(Integer.toString(uDPConfig.receivePort));
@@ -54,8 +41,8 @@ public class ConfigureConnection extends Activity{
 		}
 
 		//set Buttons
-		okInput = (Button)findViewById(R.id.ok_input);
-		cancelInput = (Button)findViewById(R.id.cancel_input);
+		Button okInput = (Button)findViewById(R.id.ok_input);
+		Button cancelInput = (Button)findViewById(R.id.cancel_input);
 		okInput.setOnClickListener(onClick);
 		cancelInput.setOnClickListener(onClick);
 		
@@ -79,10 +66,11 @@ public class ConfigureConnection extends Activity{
 				break;
 			case R.id.ok_input:
 				//collect new value
-				uDPConfig.receivePort = editTextViewInput(receivePortInput);
-				uDPConfig.sendPort = editTextViewInput(sendPortInput);
-				uDPConfig.interval = editTextViewInput(intervalInput);
-				uDPConfig.hostIP = hostIPInput.getText().toString();
+				UDPConfig uDPConfig = new UDPConfig();
+				uDPConfig.receivePort = editTextViewInput((EditText)findViewById(R.id.receive_port_input));
+				uDPConfig.sendPort = editTextViewInput((EditText)findViewById(R.id.send_port_input));
+				uDPConfig.interval = editTextViewInput((EditText)findViewById(R.id.send_interval_input));
+				uDPConfig.hostIP = ((EditText)findViewById(R.id.host_ip_input)).getText().toString();
 				intent = uDPConfig.putExtras(intent);
 				//set result
 				setResult(RESULT_OK, intent);
